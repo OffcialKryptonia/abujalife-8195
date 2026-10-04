@@ -84,3 +84,21 @@ export const createCharacter = createServerFn({ method: "POST" })
     await supabaseAdmin.from("transactions").insert({ user_id: context.userId, amount: bg.cash + bg.bank, label: `Starting funds — ${bg.name}`, kind: "start" });
     return { ok: true as const, message: "Welcome to Abuja!" };
   });
+
+const lookSchema = z.object({
+  skin: z.enum(["1", "2", "3", "4"]),
+  gender: z.enum(["male", "female"]),
+  hair: z.enum(HAIR_IDS),
+  accessory: z.enum(ACCESSORY_IDS),
+});
+
+/** Cosmetic look changes are free; validated against the catalogue server-side. */
+export const updateLook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => lookSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("players").update({ ...data, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
+    if (error) { console.error(error); return { ok: false as const }; }
+    return { ok: true as const };
+  });

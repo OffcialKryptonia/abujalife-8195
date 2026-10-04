@@ -7,7 +7,7 @@ import { districtById } from "@/game/content";
 import { formatGameTime, formatNaira, levelFromXp, mood, xpForLevel } from "@/game/rules";
 import { getSoundPref, setSound } from "@/lib/sound";
 import { NeedsRings } from "./NeedsRings";
-import { CharacterPortrait } from "./PlayerCharacter";
+import { PlayerCharacter } from "./PlayerCharacter";
 import { cn } from "@/lib/utils";
 
 function LevelAvatar({ p }: { p: ReturnType<typeof useMe> }) {
@@ -29,11 +29,9 @@ function LevelAvatar({ p }: { p: ReturnType<typeof useMe> }) {
   );
 }
 
-import { PlayerCharacter } from "./PlayerCharacter";
 function CharacterPortraitInner({ p }: { p: ReturnType<typeof useMe> }) {
   return <PlayerCharacter look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory }} pose="idle" />;
 }
-void CharacterPortrait;
 
 function Wallet({ cash }: { cash: number }) {
   const shown = useAnimatedNumber(cash, 700);
