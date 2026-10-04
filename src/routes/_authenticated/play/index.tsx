@@ -144,6 +144,13 @@ function HomeScreen() {
   if (nearby) cards.push({ icon: Sparkles, title: "Happening nearby", sub: nearby.name, tone: "bg-social", to: "/play/map", search: { place: nearby.id } });
 
   const avatarPose = pose ?? idlePose;
+  const ticker = [
+    `🚕 Keke traffic easing on ${districtById(p.district).name} roads`,
+    nearby ? `🎉 ${nearby.name} is live right now` : "🎶 AbujaRadio is playing Afrobeats",
+    t.hour < 12 ? "☕ Akara & pap spots are open nearby" : t.hour < 18 ? "🛍️ Wuse Market crowds are building" : "🌙 Suya spots are busy tonight",
+    job ? `💼 ${job.employer} has a shift open` : "💼 3 new jobs posted on your phone",
+    "📈 Invest app: markets ticked up today",
+  ];
 
   return (
     <div className="space-y-3">
@@ -219,6 +226,8 @@ function HomeScreen() {
         )}
       </div>
 
+      {!edit && <CityTicker items={ticker} />}
+
       {!edit && cards.length > 0 && (
         <div className="scrollbar-none -mx-3 flex snap-x gap-2 overflow-x-auto px-3 pb-1">
           {cards.map((c, i) => {
@@ -290,6 +299,17 @@ function HomeScreen() {
       )}
 
       {lookOpen && <LookEditor p={p} onClose={() => setLookOpen(false)} />}
+    </div>
+  );
+}
+
+function CityTicker({ items }: { items: string[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => { const id = setInterval(() => { if (!document.hidden) setI((x) => (x + 1) % items.length); }, 5000); return () => clearInterval(id); }, [items.length]);
+  return (
+    <div className="glass flex items-center gap-2 overflow-hidden rounded-full py-1.5 pl-1.5 pr-3 text-surface-foreground">
+      <span className="flex shrink-0 items-center gap-1 rounded-full bg-gold-gradient px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-gold-foreground"><span className="size-1.5 rounded-full bg-destructive animate-pulse" />Abuja live</span>
+      <span key={i} className="truncate text-[11px] font-semibold animate-rise">{items[i]}</span>
     </div>
   );
 }
