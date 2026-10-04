@@ -5,7 +5,7 @@ const RUN = "X-Lovable-AIG-Run-ID";
 
 /** One-shot Responses call through Lovable AI Gateway; streams and returns final text. */
 export async function askAdvisorModel(system: string, prompt: string): Promise<string> {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env['LOVABLE_API_KEY'];
   if (!apiKey) throw new Error("AI is not configured.");
   let runId: string | undefined;
   const provider = createOpenAI({
