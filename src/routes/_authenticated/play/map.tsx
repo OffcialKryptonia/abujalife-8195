@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Briefcase, Building2, Bus, Car, Clock, HeartPulse, Landmark, Megaphone, PartyPopper, ShoppingBag, Users, Utensils, X, Home as HomeIcon, Navigation } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Briefcase, Building2, Bus, Car, Clock, HeartPulse, Landmark, Megaphone, PartyPopper, ShoppingBag, Users, Utensils, X, Home as HomeIcon, Navigation, Map as MapIcon } from "lucide-react";
+const RealAbujaMap = lazy(() => import("@/components/game/RealAbujaMap"));
 import { z } from "zod";
 import { useGameAction, useMe, useProfiles, isOnline } from "@/hooks/use-player";
 import { AbujaWorld, WORLD_H, WORLD_W } from "@/components/game/AbujaWorld";
@@ -40,6 +41,7 @@ function MapScreen() {
   const [selDistrict, setSelDistrict] = useState<string | null>(search.district ?? (search.place ? null : null));
   const [vehicle, setVehicle] = useState<string | undefined>(undefined);
   const scroller = useRef<HTMLDivElement>(null);
+  const [real, setReal] = useState(false);
 
   const points = useMemo<Point[]>(() => [
     ...PLACES,
@@ -77,6 +79,9 @@ function MapScreen() {
   return (
     <div className="-mx-3 -mt-3">
       <div className="scrollbar-none sticky top-[118px] z-20 flex gap-1.5 overflow-x-auto bg-gradient-to-b from-surface/90 to-transparent px-3 pb-3 pt-2">
+        <button onClick={() => { haptic(); setReal((r) => !r); }} aria-pressed={real} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[11px] font-bold transition-all active:scale-90", real ? "bg-primary text-primary-foreground" : "glass text-surface-foreground/70")}>
+          <MapIcon className="size-3.5" />{real ? "Game view" : "Real Abuja"}
+        </button>
         {FILTERS.map(({ id, icon: I }) => { const on = filters.has(id); return (
           <button key={id} onClick={() => { haptic(); toggle(id); }} aria-pressed={on} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[11px] font-bold transition-all duration-300 active:scale-90", on ? "bg-gold-gradient text-gold-foreground shadow-gold" : "glass text-surface-foreground/70")}>
             <I key={String(on)} className={cn("size-3.5", on && "animate-nav-pop")} />{id}
@@ -84,7 +89,14 @@ function MapScreen() {
         ); })}
       </div>
 
-      <div ref={scroller} className="scrollbar-none relative h-[calc(100dvh-200px)] overflow-auto overscroll-contain">
+      {real && (
+        <div className="relative h-[calc(100dvh-200px)] overflow-hidden">
+          <Suspense fallback={<div className="grid h-full place-items-center text-surface-foreground/60">Loading Abuja…</div>}>
+            <RealAbujaMap current={p.district} selected={selDistrict} onSelect={(id) => { haptic(); setSelPlace(null); setSelDistrict(id); }} />
+          </Suspense>
+        </div>
+      )}
+      <div ref={scroller} className={cn("scrollbar-none relative h-[calc(100dvh-200px)] overflow-auto overscroll-contain", real && "hidden")}>
         <div className="relative" style={{ width: WORLD_W * S, height: WORLD_H * S }}>
           <AbujaWorld hour={t.hour} moving={filters.has("Moving")} />
           <div className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: light.tint, opacity: light.tintOpacity * 0.9, mixBlendMode: "multiply" }} />
