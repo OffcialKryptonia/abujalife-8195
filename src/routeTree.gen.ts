@@ -17,6 +17,7 @@ import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPlayRouteRouteImport } from './routes/_authenticated/play/route'
 import { Route as AuthenticatedPlayIndexRouteImport } from './routes/_authenticated/play/index'
 import { Route as AuthenticatedPlayBankRouteImport } from './routes/_authenticated/play/bank'
+import { Route as AuthenticatedPlayBuyRouteImport } from './routes/_authenticated/play/buy'
 import { Route as AuthenticatedPlayHousingRouteImport } from './routes/_authenticated/play/housing'
 import { Route as AuthenticatedPlayMapRouteImport } from './routes/_authenticated/play/map'
 import { Route as AuthenticatedPlayProfileRouteImport } from './routes/_authenticated/play/profile'
@@ -61,6 +62,11 @@ const AuthenticatedPlayBankRoute = AuthenticatedPlayBankRouteImport.update({
   path: '/bank',
   getParentRoute: () => AuthenticatedPlayRouteRoute,
 } as any)
+const AuthenticatedPlayBuyRoute = AuthenticatedPlayBuyRouteImport.update({
+  id: '/buy',
+  path: '/buy',
+  getParentRoute: () => AuthenticatedPlayRouteRoute,
+} as any)
 const AuthenticatedPlayHousingRoute =
   AuthenticatedPlayHousingRouteImport.update({
     id: '/housing',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/play': typeof AuthenticatedPlayRouteRouteWithChildren
   '/create': typeof AuthenticatedCreateRoute
   '/play/bank': typeof AuthenticatedPlayBankRoute
+  '/play/buy': typeof AuthenticatedPlayBuyRoute
   '/play/housing': typeof AuthenticatedPlayHousingRoute
   '/play/map': typeof AuthenticatedPlayMapRoute
   '/play/profile': typeof AuthenticatedPlayProfileRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/create': typeof AuthenticatedCreateRoute
   '/play/bank': typeof AuthenticatedPlayBankRoute
+  '/play/buy': typeof AuthenticatedPlayBuyRoute
   '/play/housing': typeof AuthenticatedPlayHousingRoute
   '/play/map': typeof AuthenticatedPlayMapRoute
   '/play/profile': typeof AuthenticatedPlayProfileRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/play': typeof AuthenticatedPlayRouteRouteWithChildren
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/play/bank': typeof AuthenticatedPlayBankRoute
+  '/_authenticated/play/buy': typeof AuthenticatedPlayBuyRoute
   '/_authenticated/play/housing': typeof AuthenticatedPlayHousingRoute
   '/_authenticated/play/map': typeof AuthenticatedPlayMapRoute
   '/_authenticated/play/profile': typeof AuthenticatedPlayProfileRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/play'
     | '/create'
     | '/play/bank'
+    | '/play/buy'
     | '/play/housing'
     | '/play/map'
     | '/play/profile'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/create'
     | '/play/bank'
+    | '/play/buy'
     | '/play/housing'
     | '/play/map'
     | '/play/profile'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/_authenticated/play'
     | '/_authenticated/create'
     | '/_authenticated/play/bank'
+    | '/_authenticated/play/buy'
     | '/_authenticated/play/housing'
     | '/_authenticated/play/map'
     | '/_authenticated/play/profile'
@@ -231,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayBankRouteImport
       parentRoute: typeof AuthenticatedPlayRouteRoute
     }
+    '/_authenticated/play/buy': {
+      id: '/_authenticated/play/buy'
+      path: '/buy'
+      fullPath: '/play/buy'
+      preLoaderRoute: typeof AuthenticatedPlayBuyRouteImport
+      parentRoute: typeof AuthenticatedPlayRouteRoute
+    }
     '/_authenticated/play/housing': {
       id: '/_authenticated/play/housing'
       path: '/housing'
@@ -264,6 +283,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedPlayRouteRouteChildren {
   AuthenticatedPlayBankRoute: typeof AuthenticatedPlayBankRoute
+  AuthenticatedPlayBuyRoute: typeof AuthenticatedPlayBuyRoute
   AuthenticatedPlayHousingRoute: typeof AuthenticatedPlayHousingRoute
   AuthenticatedPlayMapRoute: typeof AuthenticatedPlayMapRoute
   AuthenticatedPlayProfileRoute: typeof AuthenticatedPlayProfileRoute
@@ -274,6 +294,7 @@ interface AuthenticatedPlayRouteRouteChildren {
 const AuthenticatedPlayRouteRouteChildren: AuthenticatedPlayRouteRouteChildren =
   {
     AuthenticatedPlayBankRoute: AuthenticatedPlayBankRoute,
+    AuthenticatedPlayBuyRoute: AuthenticatedPlayBuyRoute,
     AuthenticatedPlayHousingRoute: AuthenticatedPlayHousingRoute,
     AuthenticatedPlayMapRoute: AuthenticatedPlayMapRoute,
     AuthenticatedPlayProfileRoute: AuthenticatedPlayProfileRoute,

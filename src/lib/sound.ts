@@ -43,3 +43,23 @@ export function click(kind: "ok" | "err" = "ok") {
   g.gain.setValueAtTime(0.08, c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.18);
   o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + 0.2);
 }
+
+let radioTimer: ReturnType<typeof setInterval> | null = null;
+/** Procedural radio loop: a different groove per station. */
+export function playRadio(station: number) {
+  stopRadio();
+  const c = ac();
+  const bpm = [104, 118, 96, 124][station % 4]!;
+  const notes = [[220, 262, 330, 294], [196, 247, 294, 247], [174, 220, 262, 330], [247, 294, 370, 330]][station % 4]!;
+  let step = 0;
+  const beat = 60 / bpm / 2;
+  radioTimer = setInterval(() => {
+    const t = c.currentTime;
+    if (step % 4 === 0 || (station % 2 && step % 8 === 6)) { const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.15); g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2); o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.2); }
+    if (step % 2 === 1) { const o = c.createOscillator(), g = c.createGain(); o.type = "square"; o.frequency.value = 6000 + (step % 3) * 500; g.gain.setValueAtTime(0.015, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.05); }
+    if (step % 2 === 0) { const o = c.createOscillator(), g = c.createGain(); o.type = "triangle"; o.frequency.value = notes[(step / 2) % 4]!; g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + beat * 1.8); o.connect(g).connect(c.destination); o.start(t); o.stop(t + beat * 2); }
+    step = (step + 1) % 16;
+  }, beat * 1000);
+}
+export function stopRadio() { if (radioTimer) clearInterval(radioTimer); radioTimer = null; }
+export const radioPlaying = () => radioTimer !== null;
