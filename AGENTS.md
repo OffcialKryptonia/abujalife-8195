@@ -15,3 +15,4 @@
 - All player-state writes go through `performAction`/`createCharacter` server functions using the admin client; players/transactions tables are read-only to clients via RLS — prevents cheating.
 - Signed-in game screens live under `src/routes/_authenticated/play/` with a shared layout that redirects to `/create` when no character exists.
 - Game visuals are hand-built SVG + CSS keyframes (PlayerCharacter poses, IsoRoom, DayNightLighting) — no 3D engine or remote assets, keeps it light on mobile networks.
+- AI features (life coach) call Lovable AI Gateway only from server functions (`src/lib/advisor.functions.ts` → `advisor.server.ts`), with game context built server-side from the player row — keeps the key private and prompts untamperable.

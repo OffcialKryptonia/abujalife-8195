@@ -122,7 +122,7 @@ function HomeScreen() {
     walkTo(w.front); setPose("walk");
     await wait(900);
     setFlip(true); setWardrobeOpen(true); setPose("wash");
-    setFx({ k: Date.now(), at: w.front, z: 0, items: [{ label: "Wardrobe", v: "open", good: true }] });
+    setFx({ k: Date.now(), at: w.front, z: 0, items: [{ label: "wardrobe", v: "Open", good: true }] });
     await wait(1100);
     setPose(null); busy.current = false;
     setLookOpen(true);
