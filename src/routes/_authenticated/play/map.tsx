@@ -88,7 +88,7 @@ function MapScreen() {
         <div className="relative" style={{ width: WORLD_W * S, height: WORLD_H * S }}>
           <AbujaWorld hour={t.hour} moving={filters.has("Moving")} />
           <div className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: light.tint, opacity: light.tintOpacity * 0.9, mixBlendMode: "multiply" }} />
-          {DISTRICTS.map((d, i) => {
+          {DISTRICTS.map((d) => {
             const me = d.id === p.district; const sel = selDistrict === d.id;
             return (
               <button key={d.id} onClick={() => { haptic(); setSelDistrict(d.id); setSelPlace(null); }} aria-label={d.name}
@@ -105,7 +105,6 @@ function MapScreen() {
                     {nearby(d.id) || <Navigation className="size-3.5" />}
                   </span>
                 )}
-                <span className="mt-1 whitespace-nowrap rounded-full bg-surface/85 px-2 py-0.5 font-display text-[10px] font-bold text-surface-foreground shadow-card backdrop-blur animate-rise" style={{ animationDelay: `${i * 35}ms` }}>{d.name}</span>
               </button>
             );
           })}
