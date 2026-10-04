@@ -271,7 +271,6 @@ export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, p
               {wardrobeOpen ? <>
                 <polygon points={pts([up(f0, 6), up(f1, 6), up(f1, h - 6), up(f0, h - 6)])} fill="oklch(0.16 0.02 40)" />
                 {[0.15, 0.3, 0.45, 0.6, 0.75, 0.88].map((t, i) => { const p = up(lerp(f0, f1, t), h - 16); return <path key={t} d={`M${p[0]} ${p[1]} l-4 6 l0 30 l8 0 l0 -30 z`} fill={["oklch(0.55 0.15 30)", "var(--gold)", "oklch(0.45 0.1 160)", "oklch(0.35 0.08 250)", "oklch(0.7 0.12 85)", "oklch(0.5 0.14 350)"][i]} className="anim-leaf" style={{ animationDelay: `${i * 0.3}s` }} />; })}
-                <polygon points={pts([up(f0, 6), up(lerp(f0, f1, 0.5), 6), [lerp(f0, f1, 0.5)[0] + 14, up(lerp(f0, f1, 0.5), 6)[1] + 8], [f0[0] + 14, up(f0, 6)[1] + 8]].map((q) => q as Pt).concat([]))} fill="none" />
               </> : <>
                 <polyline points={pts([up(mid, 6), up(mid, h - 6)])} stroke="oklch(0.25 0.04 50)" strokeWidth="1.2" />
                 {[0.42, 0.58].map((t) => { const p = up(lerp(f0, f1, t), h * 0.5); return <circle key={t} cx={p[0]} cy={p[1]} r="1.8" style={{ fill: "var(--gold)" }} />; })}
