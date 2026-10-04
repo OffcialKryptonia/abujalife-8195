@@ -3,7 +3,7 @@ import { outfitById } from "@/game/content";
 
 /** Original AbujaLife stylised character, drawn in SVG with CSS-driven poses. Feet sit at (0,0). */
 export type Pose = "idle" | "walk" | "sit" | "sleep" | "eat" | "phone" | "cheer" | "tired" | "sad" | "wash";
-export interface Look { skin: string; gender: string; outfit: string; hair?: string | null | undefined; accessory?: string | null | undefined }
+export interface Look { skin: string; gender: string; outfit: string; hair?: string | null | undefined; accessory?: string | null | undefined; face?: string | null | undefined; shoes?: string | null | undefined }
 
 const skinOf = (s: string) => `var(--skin-${["1", "2", "3", "4"].includes(s) ? s : "3"})`;
 const mix = (c: string, p: number, w = "black") => `color-mix(in oklch, ${c} ${p}%, ${w})`;
@@ -35,14 +35,18 @@ function Arm({ seg, sleeve, short, skin, prop, watch, wide }: { seg: Seg; sleeve
   );
 }
 
-function Leg({ hip, knee, cls, delay, fill, shoe }: { hip: number; knee: number; cls?: string | undefined; delay?: string; fill: string; shoe: string }) {
+function Leg({ hip, knee, cls, delay, fill, shoe, kind = "loafers" }: { hip: number; knee: number; cls?: string | undefined; delay?: string; fill: string; shoe: string; kind?: string }) {
   return (
     <g transform={`rotate(${hip})`}>
       <g className={cls} style={{ ...o0(0, 0), animationDelay: delay }}>
         <rect x="-2.8" y="-1" width="5.6" height="13.5" rx="2.6" fill={fill} />
         <g transform={`translate(0 12) rotate(${knee})`}>
           <rect x="-2.6" y="-1" width="5.2" height="13" rx="2.4" fill={fill} />
+          {kind === "boots" && <rect x="-3" y="8" width="6" height="5" rx="1.5" fill={shoe} />}
           <ellipse cx="1.4" cy="13" rx="4" ry="2.3" fill={shoe} />
+          {kind === "sneakers" && <path d="M-2 12.4 L4.5 12.4" stroke="var(--gold)" strokeWidth="0.9" />}
+          {kind === "palm" && <path d="M-2.4 12 Q1.4 10 5 12" stroke="oklch(0.55 0.12 40)" strokeWidth="1.6" fill="none" />}
+          {kind === "heels" && <rect x="-2.6" y="13" width="1.4" height="2.6" fill={shoe} />}
         </g>
       </g>
     </g>
@@ -78,7 +82,9 @@ export function PlayerCharacter({ look, pose = "idle", x = 0, y = 0, scale = 1 }
   const patterned = o.id === "ankara" || o.id === "asooke";
   const topFill = patterned ? `url(#pat${uid})` : cloth;
   const trousers = o.id === "street" ? "oklch(0.4 0.08 255)" : o.id === "corporate" ? cloth : robe ? mix(cloth, 82) : patterned ? `url(#pat${uid})` : "oklch(0.25 0.02 250)";
-  const shoe = o.id === "street" ? "oklch(0.95 0.01 90)" : "oklch(0.22 0.025 40)";
+  const face = look.face ?? "calm";
+  const shoeKind = look.shoes ?? (o.id === "street" ? "sneakers" : "loafers");
+  const shoe = { sneakers: "oklch(0.95 0.01 90)", loafers: "oklch(0.32 0.06 45)", palm: skin, heels: "oklch(0.2 0.03 20)", boots: "oklch(0.28 0.04 50)" }[shoeKind] ?? "oklch(0.22 0.025 40)";
   const lowered = P === "sit" ? 11 : 0;
   const armsFront = P === "eat" || P === "phone" || P === "cheer" || P === "wash";
   const headTilt = P === "phone" ? 9 : P === "tired" ? 14 : P === "sad" ? 11 : 0;
@@ -121,8 +127,8 @@ export function PlayerCharacter({ look, pose = "idle", x = 0, y = 0, scale = 1 }
           </linearGradient>
         </defs>
         {/* legs */}
-        <g transform="translate(-3.4 -26)"><Leg hip={legsSit ? -82 : 0} knee={legsSit ? 82 : 0} cls={walk ? "pc-leg" : undefined} delay="-0.35s" fill={mix(trousers.startsWith("url") ? cloth : trousers, 88)} shoe={shoe} /></g>
-        <g transform="translate(3.4 -26)"><Leg hip={legsSit ? -78 : 0} knee={legsSit ? 78 : 0} cls={walk ? "pc-leg" : undefined} fill={trousers} shoe={shoe} /></g>
+        <g transform="translate(-3.4 -26)"><Leg hip={legsSit ? -82 : 0} knee={legsSit ? 82 : 0} cls={walk ? "pc-leg" : undefined} delay="-0.35s" fill={mix(trousers.startsWith("url") ? cloth : trousers, 88)} shoe={shoe} kind={shoeKind} /></g>
+        <g transform="translate(3.4 -26)"><Leg hip={legsSit ? -78 : 0} knee={legsSit ? 78 : 0} cls={walk ? "pc-leg" : undefined} fill={trousers} shoe={shoe} kind={shoeKind} /></g>
         {wrapper && !legsSit && <><path d="M-9.5 -31 L9.5 -31 L11.5 -4 Q0 -2 -11.5 -4Z" fill={topFill} /><path d="M-9.5 -31 L9.5 -31 L11.5 -4 Q0 -2 -11.5 -4Z" fill={`url(#sh${uid})`} /></>}
         <g transform={`rotate(${slump} 0 -26)`}>
           <g className={P === "idle" || P === "phone" || P === "sad" ? "pc-breathe" : undefined} style={o0(0, -26)}>
@@ -157,11 +163,14 @@ export function PlayerCharacter({ look, pose = "idle", x = 0, y = 0, scale = 1 }
                       <ellipse cx="3.6" cy="-66" rx="1.35" ry="1.8" fill="oklch(0.16 0.02 40)" />
                       <circle cx="-3.1" cy="-66.6" r="0.45" fill="white" />
                       <circle cx="4.1" cy="-66.6" r="0.45" fill="white" />
+                      {face === "bright" && <><path d="M-5.4 -67.8 l-0.9 -0.9 M5.4 -67.8 l0.9 -0.9" stroke="oklch(0.16 0.02 40)" strokeWidth="0.7" /><circle cx="-3.6" cy="-66" r="2.2" fill="none" stroke="white" strokeOpacity="0.25" strokeWidth="0.5" /></>}
                       {halfLid && <><rect x="-5.2" y="-68.2" width="3.2" height="2" fill={skin} /><rect x="2" y="-68.2" width="3.2" height="2" fill={skin} /></>}
                     </g>}
-                <path d={P === "sad" || P === "tired" ? "M-5.6 -69.2 L-2 -70.4 M2 -70.4 L5.6 -69.2" : "M-5.6 -70 Q-3.8 -71.4 -2 -70.4 M2 -70.4 Q3.8 -71.4 5.6 -70"} stroke={HAIR} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+                <path d={P === "sad" || P === "tired" ? "M-5.6 -69.2 L-2 -70.4 M2 -70.4 L5.6 -69.2" : "M-5.6 -70 Q-3.8 -71.4 -2 -70.4 M2 -70.4 Q3.8 -71.4 5.6 -70"} stroke={HAIR} strokeWidth={face === "bold" ? 1.9 : 1.1} fill="none" strokeLinecap="round" />
                 <path d="M0.3 -64.6 q1.5 2.2 -0.4 2.8" stroke={skinD} strokeWidth="1" fill="none" />
                 {mouth}
+                {face === "beard" && <path d="M-8.5 -64 Q-8 -56 0 -55 Q8 -56 8.5 -64 Q6 -58.5 3.5 -59.8 Q0 -58.6 -3.5 -59.8 Q-6 -58.5 -8.5 -64Z" fill={HAIR} opacity="0.9" />}
+                {face === "dimples" && <><circle cx="-4.6" cy="-60" r="0.6" fill={skinD} /><circle cx="4.6" cy="-60" r="0.6" fill={skinD} /></>}
                 {P === "cheer" && <><circle cx="-6" cy="-62" r="1.6" fill="oklch(0.6 0.15 20)" opacity="0.35" /><circle cx="6" cy="-62" r="1.6" fill="oklch(0.6 0.15 20)" opacity="0.35" /></>}
                 {/* hair front */}
                 {hair === "fade" && <path d="M-10 -67 Q-11 -77.5 0 -78 Q11 -77.5 10 -67 Q9 -71.5 6 -72.5 Q0 -74 -6 -72.5 Q-9 -71.5 -10 -67Z" fill={HAIR} />}

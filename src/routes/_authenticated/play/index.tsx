@@ -170,7 +170,7 @@ function HomeScreen() {
       <div className="relative overflow-hidden rounded-[30px] border border-surface-foreground/10 shadow-[0_30px_60px_-25px_oklch(0_0_0/0.8)] transition-[background] duration-1000" style={{ background: light.backdrop }}>
         <IsoRoom
           home={home} furniture={p.furniture} hour={t.hour} minute={minute} selected={edit ? sel : bubble} placing={placing} activeUid={activeUid} hotspots={!edit && atHome}
-          avatar={atHome && !edit ? { skin: p.skin, outfit: p.outfit, gender: p.gender, hair: p.hair, accessory: p.accessory, at, pose: avatarPose, z: avatarZ, flip, depth: avatarDepth } : null}
+          avatar={atHome && !edit ? { skin: p.skin, outfit: p.outfit, gender: p.gender, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes, at, pose: avatarPose, z: avatarZ, flip, depth: avatarDepth } : null}
           onItem={(r) => {
             if (edit) { setSel(r.u === sel ? null : r.u); return; }
             const it = itemById(r.i);

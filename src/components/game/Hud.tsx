@@ -30,7 +30,7 @@ function LevelAvatar({ p }: { p: ReturnType<typeof useMe> }) {
 }
 
 function CharacterPortraitInner({ p }: { p: ReturnType<typeof useMe> }) {
-  return <PlayerCharacter look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory }} pose="idle" />;
+  return <PlayerCharacter look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} pose="idle" />;
 }
 
 function Wallet({ cash }: { cash: number }) {
