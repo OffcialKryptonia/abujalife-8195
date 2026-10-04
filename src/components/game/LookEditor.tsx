@@ -55,7 +55,7 @@ export function LookEditor({ p, onClose }: { p: Player; onClose: () => void }) {
           <button aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-full bg-surface-foreground/10"><X className="size-4" /></button>
         </div>
         <div className="relative mb-3 grid place-items-center overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_50%_35%,var(--primary),transparent_70%)]">
-          <CharacterPortrait look={{ skin, gender, outfit: p.outfit, hair, accessory }} pose={POSES[pi]} size={130} />
+          <CharacterPortrait look={{ skin, gender, outfit: p.outfit, hair, accessory }} pose={POSES[pi] ?? "idle"} size={130} />
           <span className="absolute bottom-2 rounded-full bg-surface/70 px-2.5 py-0.5 text-[10px] font-semibold">Wearing {outfit} · buy more in Boutique</span>
         </div>
         <div className="space-y-3">
