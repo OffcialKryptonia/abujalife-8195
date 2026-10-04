@@ -15,6 +15,13 @@
       "when": 1791148588750,
       "tag": "0001_game_world_social",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791151455683,
+      "tag": "0002_player_look",
+      "breakpoints": true
     }
   ]
 }

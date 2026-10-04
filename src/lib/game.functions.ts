@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { applyAction, GameRuleError, type GameAction, type PlayerState } from "@/game/rules";
-import { backgroundById, BACKGROUNDS, DISTRICT_IDS } from "@/game/content";
+import { ACCESSORY_IDS, backgroundById, BACKGROUNDS, DISTRICT_IDS, HAIR_IDS } from "@/game/content";
 
 const id = z.string().max(40);
 const amount = z.number().int().positive().max(1e10);
@@ -83,4 +83,22 @@ export const createCharacter = createServerFn({ method: "POST" })
     if (error) { console.error(error); return { ok: false as const, message: "Couldn't create character." }; }
     await supabaseAdmin.from("transactions").insert({ user_id: context.userId, amount: bg.cash + bg.bank, label: `Starting funds — ${bg.name}`, kind: "start" });
     return { ok: true as const, message: "Welcome to Abuja!" };
+  });
+
+const lookSchema = z.object({
+  skin: z.enum(["1", "2", "3", "4"]),
+  gender: z.enum(["male", "female"]),
+  hair: z.enum(HAIR_IDS),
+  accessory: z.enum(ACCESSORY_IDS),
+});
+
+/** Cosmetic look changes are free; validated against the catalogue server-side. */
+export const updateLook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => lookSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("players").update({ ...data, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
+    if (error) { console.error(error); return { ok: false as const }; }
+    return { ok: true as const };
   });
