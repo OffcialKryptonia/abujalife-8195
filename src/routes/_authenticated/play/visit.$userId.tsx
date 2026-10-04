@@ -38,7 +38,7 @@ function VisitScreen() {
         <p className="flex items-center gap-1 text-xs text-surface-foreground/60"><Eye className="size-3" />{data.visits} visits · Comfort {homeComfort(data.furniture)}</p>
       </div>
       <div className="overflow-hidden rounded-3xl border border-surface-foreground/10">
-        <IsoRoom home={home} furniture={data.furniture} hour={formatGameTime(me.game_minutes).hour} avatar={{ skin: data.skin, outfit: data.outfit, gender: data.gender, hair: data.hair, accessory: data.accessory, at: [Math.floor(home.size / 2) + 0.5, home.size - 0.5] }} />
+        <IsoRoom home={home} furniture={data.furniture} hour={formatGameTime(me.game_minutes).hour} avatar={{ skin: data.skin, outfit: data.outfit, gender: data.gender, at: [Math.floor(home.size / 2) + 0.5, home.size - 0.5] }} />
       </div>
     </div>
   );
