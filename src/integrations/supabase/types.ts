@@ -282,6 +282,7 @@ export type Database = {
           post_id: string | null
           reason: string
           reporter_id: string
+          status: string
           target_user: string | null
         }
         Insert: {
@@ -290,6 +291,7 @@ export type Database = {
           post_id?: string | null
           reason: string
           reporter_id: string
+          status?: string
           target_user?: string | null
         }
         Update: {
@@ -298,6 +300,7 @@ export type Database = {
           post_id?: string | null
           reason?: string
           reporter_id?: string
+          status?: string
           target_user?: string | null
         }
         Relationships: []
@@ -329,6 +332,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -350,6 +371,13 @@ export type Database = {
           xp: number
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_blocked: {
         Args: { _blocked: string; _blocker: string }
         Returns: boolean
@@ -357,7 +385,7 @@ export type Database = {
       visit_home: { Args: { _target: string }; Returns: Json }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -484,6 +512,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
