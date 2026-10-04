@@ -206,6 +206,26 @@ export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, p
           <circle r="1.2" style={{ fill: "var(--gold)" }} />
         </g>
 
+        {/* lived-in details: door, shelf with books + plant, family photos, outlet, AC unit */}
+        <g pointerEvents="none">
+          <polygon points={pts([onL(0.8, 6), onL(0.96, 6), onL(0.96, 92), onL(0.8, 92)])} style={{ fill: "oklch(0.4 0.07 50)", stroke: shade(home.wall, 50) }} strokeWidth="3" />
+          <polygon points={pts([onL(0.82, 14), onL(0.94, 14), onL(0.94, 48), onL(0.82, 48)])} fill="black" opacity="0.12" />
+          <polygon points={pts([onL(0.82, 54), onL(0.94, 54), onL(0.94, 86), onL(0.82, 86)])} fill="black" opacity="0.12" />
+          <circle cx={onL(0.93, 50)[0]} cy={onL(0.93, 50)[1]} r="1.8" style={{ fill: "var(--gold)" }} />
+          {[0.08, 0.15].map((t, i) => <polygon key={i} points={pts([onL(t, 84 - i * 8), onL(t + 0.08, 84 - i * 8), onL(t + 0.08, 66 - i * 8), onL(t, 66 - i * 8)])} style={{ fill: "oklch(0.25 0.03 50)", stroke: "oklch(0.95 0.01 85)" }} strokeWidth="1.5" />)}
+          <polygon points={pts([onL(0.09, 82), onL(0.15, 82), onL(0.15, 68), onL(0.09, 68)])} fill="oklch(0.6 0.08 60)" opacity="0.8" />
+          <polygon points={pts([onR(0.78, 78), onR(0.96, 78), onR(0.96, 74), onR(0.78, 74)])} style={{ fill: "oklch(0.42 0.06 55)" }} />
+          {[0.79, 0.81, 0.83, 0.85, 0.87].map((t, i) => <polygon key={t} points={pts([onR(t, 78), onR(t + 0.016, 78), onR(t + 0.016, 90 + (i % 3) * 2), onR(t, 90 + (i % 3) * 2)])} style={{ fill: ["oklch(0.5 0.13 30)", "oklch(0.45 0.08 160)", "oklch(0.75 0.12 85)", "oklch(0.35 0.06 250)", "oklch(0.6 0.1 140)"][i] }} />)}
+          <g className="anim-leaf"><path d={`M${onR(0.92, 78)[0]} ${onR(0.92, 78)[1]} q-6 -10 -2 -16 M${onR(0.92, 78)[0]} ${onR(0.92, 78)[1]} q5 -9 8 -12 M${onR(0.92, 78)[0]} ${onR(0.92, 78)[1]} q0 -12 1 -18`} stroke="oklch(0.5 0.12 150)" strokeWidth="2.6" fill="none" strokeLinecap="round" /></g>
+          <polygon points={pts([onR(0.9, 78), onR(0.94, 78), onR(0.935, 82), onR(0.905, 82)])} fill="oklch(0.6 0.1 40)" />
+          <polygon points={pts([onR(0.08, 112), onR(0.3, 112), onR(0.3, 100), onR(0.08, 100)])} fill="oklch(0.96 0.005 90)" style={{ stroke: "oklch(0.8 0.01 90)" }} strokeWidth="1" />
+          <polyline points={pts([onR(0.1, 102), onR(0.28, 102)])} stroke="oklch(0.75 0.01 90)" strokeWidth="1" />
+          <circle cx={onR(0.27, 108)[0]} cy={onR(0.27, 108)[1]} r="1" fill={light.phase === "night" ? "oklch(0.7 0.2 145)" : "oklch(0.7 0.15 145)"} className="anim-glow" />
+          <rect x={onR(0.2, 14)[0] - 2} y={onR(0.2, 14)[1] - 3} width="4" height="5" rx="1" fill="oklch(0.95 0.01 90)" />
+        </g>
+
+
+
         {/* floor */}
         {Array.from({ length: n * n }, (_, i) => {
           const x = i % n, y = Math.floor(i / n);

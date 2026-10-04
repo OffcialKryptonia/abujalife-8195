@@ -173,6 +173,13 @@
 @utility pc-leg { animation: pc-leg .7s ease-in-out infinite; }
 @utility pc-arm { animation: pc-arm .7s ease-in-out infinite; }
 @utility pc-bob { animation: pc-bob .7s ease-in-out infinite; }
+@keyframes pc-shadow { 0%,50%,100% { transform: scaleX(1) } 25%,75% { transform: scaleX(.86) } }
+@utility pc-shadow { animation: pc-shadow .7s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes pc-sprite { to { transform: translateX(var(--sprite-w)) } }
+@keyframes room-fan { to { transform: rotate(360deg) } }
+@utility anim-fan { animation: room-fan 2.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes room-leaf { 0%,100% { transform: rotate(-2deg) } 50% { transform: rotate(3deg) } }
+@utility anim-leaf { animation: room-leaf 5s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom center; }
 @utility pc-eat { animation: pc-eat 1.4s ease-in-out infinite; }
 @utility pc-chew { animation: pc-chew .35s ease-in-out infinite; }
 @utility pc-jump { animation: pc-jump .8s cubic-bezier(.3,.7,.4,1) infinite; }
