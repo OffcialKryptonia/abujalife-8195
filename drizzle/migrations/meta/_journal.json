@@ -8,6 +8,13 @@
       "when": 1791145829830,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791148588750,
+      "tag": "0001_game_world_social",
+      "breakpoints": true
     }
   ]
 }

@@ -2,19 +2,31 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { applyAction, GameRuleError, type GameAction, type PlayerState } from "@/game/rules";
-import { backgroundById, BACKGROUNDS } from "@/game/content";
+import { backgroundById, BACKGROUNDS, DISTRICT_IDS } from "@/game/content";
 
+const id = z.string().max(40);
+const amount = z.number().int().positive().max(1e10);
 const actionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("work") }),
-  z.object({ type: z.literal("eat"), foodId: z.string().max(40) }),
-  z.object({ type: z.literal("rest") }),
-  z.object({ type: z.literal("travel"), to: z.enum(["maitama", "asokoro", "wuse2", "garki", "jabi", "gwarinpa", "kubwa", "lugbe"]) }),
-  z.object({ type: z.literal("applyJob"), jobId: z.string().max(40) }),
+  z.object({ type: z.literal("visit"), placeId: id }),
+  z.object({ type: z.literal("order"), menuId: id }),
+  z.object({ type: z.literal("travel"), to: z.enum(DISTRICT_IDS), vehicle: id.optional() }),
+  z.object({ type: z.literal("applyJob"), jobId: id }),
   z.object({ type: z.literal("quitJob") }),
-  z.object({ type: z.literal("moveHome"), homeId: z.string().max(40) }),
-  z.object({ type: z.literal("deposit"), amount: z.number().int().positive().max(1e10) }),
-  z.object({ type: z.literal("withdraw"), amount: z.number().int().positive().max(1e10) }),
-  z.object({ type: z.literal("hangout"), hangoutId: z.string().max(40) }),
+  z.object({ type: z.literal("moveHome"), homeId: id }),
+  z.object({ type: z.literal("deposit"), amount }),
+  z.object({ type: z.literal("withdraw"), amount }),
+  z.object({ type: z.literal("useItem"), uid: id }),
+  z.object({ type: z.literal("buyItem"), itemId: id }),
+  z.object({ type: z.literal("placeItem"), uid: id, x: z.number().int().min(0).max(20), y: z.number().int().min(0).max(20), r: z.number().int().min(0).max(3) }),
+  z.object({ type: z.literal("storeItem"), uid: id }),
+  z.object({ type: z.literal("sellItem"), uid: id }),
+  z.object({ type: z.literal("buyVehicle"), vehicleId: id }),
+  z.object({ type: z.literal("buyOutfit"), outfitId: id }),
+  z.object({ type: z.literal("claimChallenge") }),
+  z.object({ type: z.literal("invest"), amount }),
+  z.object({ type: z.literal("cashOut") }),
+  z.object({ type: z.literal("playGame"), gameId: id }),
 ]);
 
 export const performAction = createServerFn({ method: "POST" })
@@ -26,7 +38,7 @@ export const performAction = createServerFn({ method: "POST" })
     if (error || !row) return { ok: false as const, message: "Create your character first." };
     let result;
     try {
-      result = applyAction(row as PlayerState, data);
+      result = applyAction(row as unknown as PlayerState, data, { uid: crypto.randomUUID().slice(0, 8) });
     } catch (e) {
       if (e instanceof GameRuleError) return { ok: false as const, message: e.message };
       throw e;
@@ -37,6 +49,8 @@ export const performAction = createServerFn({ method: "POST" })
       district: n.district, cash: n.cash, bank: n.bank, hunger: n.hunger, energy: n.energy,
       happiness: n.happiness, xp: n.xp, reputation: n.reputation, job_id: n.job_id,
       career_xp: n.career_xp, shifts: n.shifts, home_id: n.home_id, game_minutes: n.game_minutes,
+      hygiene: n.hygiene, social: n.social, outfit: n.outfit, furniture: n.furniture as never, vehicles: n.vehicles as never,
+      last_challenge_day: n.last_challenge_day, invest_amount: n.invest_amount, invest_start: n.invest_start, has_nin: n.has_nin,
       updated_at: new Date().toISOString(),
     }).eq("user_id", context.userId);
     if (upErr) { console.error(upErr); return { ok: false as const, message: "Couldn't save. Try again." }; }
@@ -50,7 +64,7 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(24).regex(/^[\p{L}\p{N} .'-]+$/u),
   gender: z.enum(["male", "female"]),
   skin: z.enum(["1", "2", "3", "4"]),
-  outfit: z.enum(["agbada", "kaftan", "ankara", "corporate", "street"]),
+  outfit: z.enum(["agbada", "kaftan", "ankara", "corporate", "street", "senator", "asooke"]),
   background: z.enum(BACKGROUNDS.map((b) => b.id) as [string, ...string[]]),
 });
 
