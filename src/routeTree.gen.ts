@@ -20,8 +20,10 @@ import { Route as AuthenticatedPlayBankRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPlayBuyRouteImport } from './routes/_authenticated/play/buy'
 import { Route as AuthenticatedPlayHousingRouteImport } from './routes/_authenticated/play/housing'
 import { Route as AuthenticatedPlayMapRouteImport } from './routes/_authenticated/play/map'
+import { Route as AuthenticatedPlayPhoneRouteImport } from './routes/_authenticated/play/phone'
 import { Route as AuthenticatedPlayProfileRouteImport } from './routes/_authenticated/play/profile'
 import { Route as AuthenticatedPlayWorkRouteImport } from './routes/_authenticated/play/work'
+import { Route as AuthenticatedPlayVisitUserIdRouteImport } from './routes/_authenticated/play/visit.$userId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -78,6 +80,11 @@ const AuthenticatedPlayMapRoute = AuthenticatedPlayMapRouteImport.update({
   path: '/map',
   getParentRoute: () => AuthenticatedPlayRouteRoute,
 } as any)
+const AuthenticatedPlayPhoneRoute = AuthenticatedPlayPhoneRouteImport.update({
+  id: '/phone',
+  path: '/phone',
+  getParentRoute: () => AuthenticatedPlayRouteRoute,
+} as any)
 const AuthenticatedPlayProfileRoute =
   AuthenticatedPlayProfileRouteImport.update({
     id: '/profile',
@@ -89,6 +96,12 @@ const AuthenticatedPlayWorkRoute = AuthenticatedPlayWorkRouteImport.update({
   path: '/work',
   getParentRoute: () => AuthenticatedPlayRouteRoute,
 } as any)
+const AuthenticatedPlayVisitUserIdRoute =
+  AuthenticatedPlayVisitUserIdRouteImport.update({
+    id: '/visit/$userId',
+    path: '/visit/$userId',
+    getParentRoute: () => AuthenticatedPlayRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -100,9 +113,11 @@ export interface FileRoutesByFullPath {
   '/play/buy': typeof AuthenticatedPlayBuyRoute
   '/play/housing': typeof AuthenticatedPlayHousingRoute
   '/play/map': typeof AuthenticatedPlayMapRoute
+  '/play/phone': typeof AuthenticatedPlayPhoneRoute
   '/play/profile': typeof AuthenticatedPlayProfileRoute
   '/play/work': typeof AuthenticatedPlayWorkRoute
   '/play/': typeof AuthenticatedPlayIndexRoute
+  '/play/visit/$userId': typeof AuthenticatedPlayVisitUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -113,9 +128,11 @@ export interface FileRoutesByTo {
   '/play/buy': typeof AuthenticatedPlayBuyRoute
   '/play/housing': typeof AuthenticatedPlayHousingRoute
   '/play/map': typeof AuthenticatedPlayMapRoute
+  '/play/phone': typeof AuthenticatedPlayPhoneRoute
   '/play/profile': typeof AuthenticatedPlayProfileRoute
   '/play/work': typeof AuthenticatedPlayWorkRoute
   '/play': typeof AuthenticatedPlayIndexRoute
+  '/play/visit/$userId': typeof AuthenticatedPlayVisitUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -129,9 +146,11 @@ export interface FileRoutesById {
   '/_authenticated/play/buy': typeof AuthenticatedPlayBuyRoute
   '/_authenticated/play/housing': typeof AuthenticatedPlayHousingRoute
   '/_authenticated/play/map': typeof AuthenticatedPlayMapRoute
+  '/_authenticated/play/phone': typeof AuthenticatedPlayPhoneRoute
   '/_authenticated/play/profile': typeof AuthenticatedPlayProfileRoute
   '/_authenticated/play/work': typeof AuthenticatedPlayWorkRoute
   '/_authenticated/play/': typeof AuthenticatedPlayIndexRoute
+  '/_authenticated/play/visit/$userId': typeof AuthenticatedPlayVisitUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -145,9 +164,11 @@ export interface FileRouteTypes {
     | '/play/buy'
     | '/play/housing'
     | '/play/map'
+    | '/play/phone'
     | '/play/profile'
     | '/play/work'
     | '/play/'
+    | '/play/visit/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -158,9 +179,11 @@ export interface FileRouteTypes {
     | '/play/buy'
     | '/play/housing'
     | '/play/map'
+    | '/play/phone'
     | '/play/profile'
     | '/play/work'
     | '/play'
+    | '/play/visit/$userId'
   id:
     | '__root__'
     | '/'
@@ -173,9 +196,11 @@ export interface FileRouteTypes {
     | '/_authenticated/play/buy'
     | '/_authenticated/play/housing'
     | '/_authenticated/play/map'
+    | '/_authenticated/play/phone'
     | '/_authenticated/play/profile'
     | '/_authenticated/play/work'
     | '/_authenticated/play/'
+    | '/_authenticated/play/visit/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -264,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayMapRouteImport
       parentRoute: typeof AuthenticatedPlayRouteRoute
     }
+    '/_authenticated/play/phone': {
+      id: '/_authenticated/play/phone'
+      path: '/phone'
+      fullPath: '/play/phone'
+      preLoaderRoute: typeof AuthenticatedPlayPhoneRouteImport
+      parentRoute: typeof AuthenticatedPlayRouteRoute
+    }
     '/_authenticated/play/profile': {
       id: '/_authenticated/play/profile'
       path: '/profile'
@@ -278,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayWorkRouteImport
       parentRoute: typeof AuthenticatedPlayRouteRoute
     }
+    '/_authenticated/play/visit/$userId': {
+      id: '/_authenticated/play/visit/$userId'
+      path: '/visit/$userId'
+      fullPath: '/play/visit/$userId'
+      preLoaderRoute: typeof AuthenticatedPlayVisitUserIdRouteImport
+      parentRoute: typeof AuthenticatedPlayRouteRoute
+    }
   }
 }
 
@@ -286,9 +325,11 @@ interface AuthenticatedPlayRouteRouteChildren {
   AuthenticatedPlayBuyRoute: typeof AuthenticatedPlayBuyRoute
   AuthenticatedPlayHousingRoute: typeof AuthenticatedPlayHousingRoute
   AuthenticatedPlayMapRoute: typeof AuthenticatedPlayMapRoute
+  AuthenticatedPlayPhoneRoute: typeof AuthenticatedPlayPhoneRoute
   AuthenticatedPlayProfileRoute: typeof AuthenticatedPlayProfileRoute
   AuthenticatedPlayWorkRoute: typeof AuthenticatedPlayWorkRoute
   AuthenticatedPlayIndexRoute: typeof AuthenticatedPlayIndexRoute
+  AuthenticatedPlayVisitUserIdRoute: typeof AuthenticatedPlayVisitUserIdRoute
 }
 
 const AuthenticatedPlayRouteRouteChildren: AuthenticatedPlayRouteRouteChildren =
@@ -297,9 +338,11 @@ const AuthenticatedPlayRouteRouteChildren: AuthenticatedPlayRouteRouteChildren =
     AuthenticatedPlayBuyRoute: AuthenticatedPlayBuyRoute,
     AuthenticatedPlayHousingRoute: AuthenticatedPlayHousingRoute,
     AuthenticatedPlayMapRoute: AuthenticatedPlayMapRoute,
+    AuthenticatedPlayPhoneRoute: AuthenticatedPlayPhoneRoute,
     AuthenticatedPlayProfileRoute: AuthenticatedPlayProfileRoute,
     AuthenticatedPlayWorkRoute: AuthenticatedPlayWorkRoute,
     AuthenticatedPlayIndexRoute: AuthenticatedPlayIndexRoute,
+    AuthenticatedPlayVisitUserIdRoute: AuthenticatedPlayVisitUserIdRoute,
   }
 
 const AuthenticatedPlayRouteRouteWithChildren =
