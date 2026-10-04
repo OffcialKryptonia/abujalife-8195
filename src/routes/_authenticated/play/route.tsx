@@ -5,6 +5,7 @@ import { BottomGameNav } from "@/components/game/BottomGameNav";
 import { GameHUD } from "@/components/game/Hud";
 import { GameTransition } from "@/components/game/feedback";
 import { getSoundPref, startAmbient } from "@/lib/sound";
+import { useAnimationPauseWhenHidden } from "@/components/game/motion";
 
 export const Route = createFileRoute("/_authenticated/play")({
   component: PlayLayout,
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/play")({
 
 function PlayLayout() {
   const { data: player, isLoading, error } = usePlayer();
+  useAnimationPauseWhenHidden();
   useEffect(() => {
     // Browsers require a gesture before audio; resume ambient on first tap if enabled.
     const on = () => { if (getSoundPref()) startAmbient(); };
