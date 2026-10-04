@@ -8,6 +8,9 @@ import { DISTRICTS, HOMES, JOBS, PLACES, districtById, homeById, jobById, vehicl
 import { formatGameTime, formatNaira, isOpen, levelFromXp, travelCost } from "@/game/rules";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { lightFor } from "@/components/game/DayNightLighting";
+import { PlayerCharacter } from "@/components/game/PlayerCharacter";
+import { haptic } from "@/components/game/motion";
 
 export const Route = createFileRoute("/_authenticated/play/map")({
   validateSearch: z.object({ place: z.string().optional(), district: z.string().optional() }),
@@ -53,6 +56,12 @@ function MapScreen() {
     el.scrollTo({ left: target.x * S - el.clientWidth / 2, top: target.y * S - el.clientHeight / 2, behavior: "smooth" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const el = scroller.current; const tg = focus ?? focusD; if (!el || !tg) return;
+    el.scrollTo({ left: tg.x * S - el.clientWidth / 2, top: tg.y * S - el.clientHeight / 3, behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selPlace, selDistrict]);
 
   const toggle = (f: Filter) => setFilters((s) => { const n = new Set(s); if (n.has(f)) n.delete(f); else n.add(f); return n; });
   const nearby = (d: string) => (profiles ?? []).filter((x) => x.district === d && isOnline(x)).length;
@@ -129,9 +138,9 @@ function MapScreen() {
             </div>
             <button aria-label="Close" className="grid size-9 place-items-center rounded-full bg-surface-foreground/10" onClick={() => { setSelPlace(null); setSelDistrict(null); }}><X className="size-4" /></button>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">{focus?.desc ?? focusD.tagline}</p>
+          <p className="mt-1 text-sm text-surface-foreground/70">{focus?.desc ?? focusD.tagline}</p>
           <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-            <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5"><Users className="size-3" />{nearby(focusD.id)} players nearby</span>
+            <span className="flex items-center gap-1 rounded-full bg-surface-foreground/10 px-2 py-0.5"><Users className="size-3" />{nearby(focusD.id)} players nearby</span>
             {focus?.hours && <span className={cn("flex items-center gap-1 rounded-full px-2 py-0.5", isOpen(focus.hours, t.hour) ? "bg-success/15 text-success" : "bg-destructive/10 text-destructive")}><Clock className="size-3" />{isOpen(focus.hours, t.hour) ? "Open" : "Closed"} · {focus.hours[0]}:00–{focus.hours[1] % 24}:00</span>}
             {!focus && focusD.landmarks.map((l) => <span key={l} className="rounded-full bg-accent px-2 py-0.5 text-accent-foreground">{l}</span>)}
           </div>
@@ -148,20 +157,20 @@ function MapScreen() {
                   {[undefined, ...p.vehicles].map((v) => <button key={v ?? "ride"} onClick={() => setVehicle(v)} className={cn("rounded-full border px-2.5 py-1 text-[11px] font-bold", vehicle === v && "border-primary bg-primary text-primary-foreground")}>{v ? vehicleById(v)?.name : "AbujaRide"}</button>)}
                 </div>
               )}
-              <Button className="w-full" disabled={act.isPending || p.cash < trip.price} onClick={() => act.mutate({ type: "travel", to: focusD.id as DistrictId, vehicle })}>
+              <Button className="h-12 w-full bg-gold-gradient text-gold-foreground shadow-gold" disabled={act.isPending || p.cash < trip.price} onClick={() => act.mutate({ type: "travel", to: focusD.id as DistrictId, vehicle })}>
                 <Navigation className="size-4" />Travel here · {trip.price ? formatNaira(trip.price) : "Free"} · {trip.minutes} min
               </Button>
             </div>
           )}
           {here && focus?.activity && (
-            <Button className="mt-3 w-full" disabled={act.isPending || p.cash < (focus.activity.cost ?? 0) || !isOpen(focus.hours, t.hour)} onClick={() => act.mutate({ type: "visit", placeId: focus.id })}>
+            <Button className="mt-3 h-12 w-full bg-gold-gradient text-gold-foreground shadow-gold" disabled={act.isPending || p.cash < (focus.activity.cost ?? 0) || !isOpen(focus.hours, t.hour)} onClick={() => act.mutate({ type: "visit", placeId: focus.id })}>
               {focus.activity.label} · {focus.activity.cost ? formatNaira(focus.activity.cost) : "Free"}
             </Button>
           )}
           {here && !focus && <p className="mt-3 text-center text-sm font-semibold text-primary">You are here. Tap a spot to explore.</p>}
           {jobOf && (
             p.job_id === jobOf.id
-              ? (here ? <Button className="mt-2 w-full" variant="secondary" disabled={act.isPending} onClick={() => act.mutate({ type: "work" })}>Work shift · +{formatNaira(jobOf.pay)}</Button> : <p className="mt-2 text-center text-xs text-muted-foreground">This is your workplace.</p>)
+              ? (here ? <Button className="mt-2 w-full" variant="secondary" disabled={act.isPending} onClick={() => act.mutate({ type: "work" })}>Work shift · +{formatNaira(jobOf.pay)}</Button> : <p className="mt-2 text-center text-xs text-surface-foreground/70">This is your workplace.</p>)
               : <Button className="mt-2 w-full" variant="secondary" disabled={act.isPending || level < jobOf.minLevel} onClick={() => act.mutate({ type: "applyJob", jobId: jobOf.id })}>{level < jobOf.minLevel ? `Needs level ${jobOf.minLevel}` : `Apply as ${jobOf.title}`}</Button>
           )}
           {homeOf && (
@@ -170,6 +179,7 @@ function MapScreen() {
           )}
           {focus?.cat === "Ads" && <Link to="/play/phone" search={{ app: focus.id === "ad_motors" ? "motors" : focus.id === "ad_homes" ? "homes" : "bank" }} className="mt-3 block rounded-xl bg-primary py-2 text-center text-sm font-semibold text-primary-foreground">Open on phone</Link>}
           {focus?.cat === "Transport" && <Link to="/play/phone" search={{ app: "ride" }} className="mt-3 block rounded-xl border py-2 text-center text-sm font-semibold"><Building2 className="mr-1 inline size-4" />Open AbujaRide</Link>}
+          </div>
         </div>
       )}
     </div>
