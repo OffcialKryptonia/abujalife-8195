@@ -257,7 +257,7 @@ export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, p
             return (
               <g key="avatar" style={{ transform: `translate(${p[0]}px, ${p[1]}px)`, transition: "transform .85s cubic-bezier(.45,.05,.35,1)" }} pointerEvents="none">
                 <g style={{ transform: a.flip ? "scaleX(-1)" : "none", transition: "transform .2s" }}>
-                  <PlayerCharacter look={a} pose={a.pose ?? "idle"} scale={0.95} />
+                  <PlayerCharacter look={a} pose={a.pose ?? "idle"} scale={1.2} />
                 </g>
               </g>
             );
