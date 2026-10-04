@@ -19,7 +19,7 @@ const actionSchema = z.discriminatedUnion("type", [
 
 export const performAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => actionSchema.parse(d) as GameAction)
+  .validator((d) => actionSchema.parse(d) as GameAction)
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("players").select("*").eq("user_id", context.userId).maybeSingle();
@@ -56,7 +56,7 @@ const createSchema = z.object({
 
 export const createCharacter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => createSchema.parse(d))
+  .validator((d) => createSchema.parse(d))
   .handler(async ({ data, context }) => {
     const bg = backgroundById(data.background);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
