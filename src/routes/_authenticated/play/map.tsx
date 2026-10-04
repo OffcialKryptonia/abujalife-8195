@@ -62,36 +62,52 @@ function MapScreen() {
   const trip = focusD && !here ? travelCost(p.district, focusD.id, vehicle) : null;
   const level = levelFromXp(p.xp);
 
+  const light = lightFor(t.hour);
+  const FocusIcon = focus ? CAT_ICON[focus.cat] : Navigation;
+
   return (
     <div className="-mx-3 -mt-3">
-      <div className="scrollbar-none sticky top-[104px] z-20 flex gap-1.5 overflow-x-auto bg-gradient-to-b from-surface to-transparent px-3 pb-3 pt-2">
-        {FILTERS.map(({ id, icon: I }) => (
-          <button key={id} onClick={() => toggle(id)} className={cn("flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-bold", filters.has(id) ? "border-gold bg-gold text-gold-foreground" : "border-surface-foreground/20 bg-surface/80 text-surface-foreground/70")}>
-            <I className="size-3.5" />{id}
+      <div className="scrollbar-none sticky top-[118px] z-20 flex gap-1.5 overflow-x-auto bg-gradient-to-b from-surface/90 to-transparent px-3 pb-3 pt-2">
+        {FILTERS.map(({ id, icon: I }) => { const on = filters.has(id); return (
+          <button key={id} onClick={() => { haptic(); toggle(id); }} aria-pressed={on} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[11px] font-bold transition-all duration-300 active:scale-90", on ? "bg-gold-gradient text-gold-foreground shadow-gold" : "glass text-surface-foreground/70")}>
+            <I key={String(on)} className={cn("size-3.5", on && "animate-nav-pop")} />{id}
           </button>
-        ))}
+        ); })}
       </div>
 
-      <div ref={scroller} className="scrollbar-none relative h-[calc(100dvh-190px)] overflow-auto overscroll-contain">
+      <div ref={scroller} className="scrollbar-none relative h-[calc(100dvh-200px)] overflow-auto overscroll-contain">
         <div className="relative" style={{ width: WORLD_W * S, height: WORLD_H * S }}>
           <AbujaWorld hour={t.hour} moving={filters.has("Moving")} />
-          {DISTRICTS.map((d) => (
-            <button key={d.id} onClick={() => { setSelDistrict(d.id); setSelPlace(null); }} aria-label={d.name}
-              className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: d.x * S, top: d.y * S }}>
-              {d.id === p.district && <span className="absolute inset-0 m-auto size-8 rounded-full bg-gold animate-ping-soft" />}
-              <span className={cn("relative grid size-8 place-items-center rounded-full border-2 text-[10px] font-black shadow-card", d.id === p.district ? "border-surface bg-gold text-gold-foreground" : "border-surface-foreground bg-surface text-surface-foreground", selDistrict === d.id && "ring-4 ring-gold/50")}>
-                {d.id === p.district ? "YOU" : nearby(d.id) || <Navigation className="size-3.5" />}
-              </span>
-            </button>
-          ))}
+          <div className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: light.tint, opacity: light.tintOpacity * 0.9, mixBlendMode: "multiply" }} />
+          {DISTRICTS.map((d, i) => {
+            const me = d.id === p.district; const sel = selDistrict === d.id;
+            return (
+              <button key={d.id} onClick={() => { haptic(); setSelDistrict(d.id); setSelPlace(null); }} aria-label={d.name}
+                className={cn("absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-transform duration-300", sel && "z-10 scale-110")} style={{ left: d.x * S, top: d.y * S }}>
+                {me ? (
+                  <span className="relative grid place-items-center">
+                    <span className="absolute size-12 rounded-full bg-gold/60 animate-ping-soft" />
+                    <span className="relative grid size-11 place-items-center overflow-hidden rounded-full border-[3px] border-gold bg-surface shadow-gold animate-bob">
+                      <svg viewBox="-17 -84 34 34" className="size-full"><PlayerCharacter look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} /></svg>
+                    </span>
+                  </span>
+                ) : (
+                  <span className={cn("relative grid size-8 place-items-center rounded-full border-2 border-surface-foreground/80 bg-surface text-[10px] font-black text-surface-foreground shadow-card", sel && "ring-4 ring-gold/60")}>
+                    {nearby(d.id) || <Navigation className="size-3.5" />}
+                  </span>
+                )}
+                <span className="mt-1 whitespace-nowrap rounded-full bg-surface/85 px-2 py-0.5 font-display text-[10px] font-bold text-surface-foreground shadow-card backdrop-blur animate-rise" style={{ animationDelay: `${i * 35}ms` }}>{d.name}</span>
+              </button>
+            );
+          })}
           {points.filter((x) => filters.has(x.cat)).map((x) => {
             const I = CAT_ICON[x.cat]; const open = isOpen(x.hours, t.hour);
             return (
-              <button key={x.id} onClick={() => { setSelPlace(x.id); setSelDistrict(null); }} aria-label={x.name}
-                className={cn("absolute flex -translate-x-1/2 -translate-y-full flex-col items-center transition-transform", selPlace === x.id && "z-10 scale-125", !open && "opacity-55")} style={{ left: x.x * S, top: x.y * S }}>
+              <button key={x.id} onClick={() => { haptic(); setSelPlace(x.id); setSelDistrict(null); }} aria-label={x.name}
+                className={cn("absolute flex -translate-x-1/2 -translate-y-full flex-col items-center transition-transform duration-300 animate-rise", selPlace === x.id && "z-10 scale-150", !open && "opacity-55")} style={{ left: x.x * S, top: x.y * S }}>
                 <span className={cn("grid size-7 place-items-center rounded-full border-2 border-surface text-surface shadow-card", CAT_TONE[x.cat])}><I className="size-3.5" /></span>
                 <span className="-mt-0.5 size-0 border-x-4 border-t-[6px] border-x-transparent border-t-surface" />
-                {x.cat === "Events" && open && <span className="absolute -top-4 whitespace-nowrap rounded-full bg-surface px-1.5 text-[9px] font-bold text-gold">LIVE</span>}
+                {x.cat === "Events" && open && <span className="absolute -top-4 whitespace-nowrap rounded-full bg-surface px-1.5 text-[9px] font-bold text-gold animate-pulse">LIVE</span>}
               </button>
             );
           })}
@@ -99,13 +115,19 @@ function MapScreen() {
       </div>
 
       {(focus || focusD) && focusD && (
-        <div className="fixed inset-x-3 bottom-24 z-40 mx-auto max-w-md rounded-3xl border bg-card p-4 shadow-[0_20px_50px_-15px_oklch(0_0_0/0.5)] animate-rise" key={focus?.id ?? focusD.id}>
+        <div className="glass fixed inset-x-3 bottom-28 z-40 mx-auto max-w-md overflow-hidden rounded-[28px] text-surface-foreground shadow-[0_24px_60px_-15px_oklch(0_0_0/0.75)] animate-rise" key={focus?.id ?? focusD.id}>
+          <div className={cn("relative h-20 overflow-hidden", focus ? CAT_TONE[focus.cat] : "bg-primary")}>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,oklch(1_0_0/0.35),transparent_55%),linear-gradient(180deg,transparent,oklch(0_0_0/0.45))]" />
+            <svg viewBox="0 0 400 80" className="absolute inset-x-0 bottom-0 h-12 w-full opacity-40" preserveAspectRatio="none"><path d="M0 80 L0 50 L30 50 L30 30 L60 30 L60 45 L95 45 L95 20 L120 20 L120 40 L160 40 L170 25 L190 40 L230 40 L230 15 L255 15 L255 45 L300 45 L300 32 L340 32 L350 50 L400 50 L400 80Z" fill="black" /></svg>
+            <FocusIcon className="absolute right-5 top-3 size-12 text-surface/40" />
+          </div>
+          <div className="p-4 pt-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{focus ? `${focus.cat} · ${focusD.name}` : `District · ${"★".repeat(focusD.tier)}`}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gold">{focus ? `${focus.cat} · ${focusD.name}` : `District · ${"★".repeat(focusD.tier)}`}</p>
               <h2 className="text-lg font-semibold leading-tight">{focus?.name ?? focusD.name}</h2>
             </div>
-            <button aria-label="Close" onClick={() => { setSelPlace(null); setSelDistrict(null); }}><X className="size-5 text-muted-foreground" /></button>
+            <button aria-label="Close" className="grid size-9 place-items-center rounded-full bg-surface-foreground/10" onClick={() => { setSelPlace(null); setSelDistrict(null); }}><X className="size-4" /></button>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{focus?.desc ?? focusD.tagline}</p>
           <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
