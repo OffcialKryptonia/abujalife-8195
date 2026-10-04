@@ -2,10 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bed, Briefcase, Check, Droplets, Hammer, MapPin, Move, Package, RotateCw, Shirt, Smartphone, Sparkles, Star, Trash2, Trophy, Utensils, X, Moon } from "lucide-react";
 import { useGameAction, useMe } from "@/hooks/use-player";
-import { IsoRoom, ItemPreview, type Pt } from "@/components/game/IsoRoom";
+import { IsoRoom, ItemPreview, wardrobeSpot, type Pt } from "@/components/game/IsoRoom";
 import type { Pose } from "@/components/game/PlayerCharacter";
 import { FloatingStatFeedback, InteractionBubble, type StatChip } from "@/components/game/feedback";
 import { LookEditor } from "@/components/game/LookEditor";
+import { CoachCard } from "@/components/game/CoachCard";
 import { lightFor } from "@/components/game/DayNightLighting";
 import { Stars } from "@/components/game/ui";
 import { districtById, homeById, itemById, jobById, PLACES, type FurnitureItem } from "@/game/content";
@@ -61,6 +62,7 @@ function HomeScreen() {
   const [activeUid, setActiveUid] = useState<string | null>(null);
   const [fx, setFx] = useState<{ k: number; at: Pt; z: number; items: StatChip[] } | null>(null);
   const [lookOpen, setLookOpen] = useState(false);
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const busy = useRef(false);
 
   const selRow = p.furniture.find((r) => r.u === sel) ?? null;
@@ -111,6 +113,19 @@ function HomeScreen() {
       setPose("cheer"); await wait(1100);
     } else { setAvatarAt(approach); setAvatarZ(0); setAvatarDepth(undefined); }
     setPose(null); busy.current = false;
+  }
+
+  async function openWardrobe() {
+    if (busy.current) return;
+    busy.current = true; setBubble(null); setSel(null);
+    const w = wardrobeSpot(home.size);
+    walkTo(w.front); setPose("walk");
+    await wait(900);
+    setFlip(true); setWardrobeOpen(true); setPose("wash");
+    setFx({ k: Date.now(), at: w.front, z: 0, items: [{ label: "wardrobe", v: "Open", good: true }] });
+    await wait(1100);
+    setPose(null); busy.current = false;
+    setLookOpen(true);
   }
 
   function openPhone() {
@@ -185,6 +200,7 @@ function HomeScreen() {
             setBubble(r.u === bubble ? null : r.u);
           }}
           onTile={placeAt}
+          onWardrobe={!edit && atHome ? openWardrobe : undefined} wardrobeOpen={wardrobeOpen}
           overlay={(project) => (
             <>
               {bubbleRow && !edit && (() => { const it = itemById(bubbleRow.i)!; const { w, d } = itemDims(bubbleRow); return (
@@ -227,6 +243,7 @@ function HomeScreen() {
       </div>
 
       {!edit && <CityTicker items={ticker} />}
+      {!edit && <CoachCard cash={p.cash} />}
 
       {!edit && cards.length > 0 && (
         <div className="scrollbar-none -mx-3 flex snap-x gap-2 overflow-x-auto px-3 pb-1">
@@ -298,7 +315,7 @@ function HomeScreen() {
         </div>
       )}
 
-      {lookOpen && <LookEditor p={p} onClose={() => setLookOpen(false)} />}
+      {lookOpen && <LookEditor p={p} onClose={() => { setLookOpen(false); setWardrobeOpen(false); setPose("cheer"); setTimeout(() => setPose(null), 1200); }} />}
     </div>
   );
 }

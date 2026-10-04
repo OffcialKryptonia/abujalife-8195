@@ -121,9 +121,13 @@ export interface IsoRoomProps {
   hotspots?: boolean | undefined;
   onItem?: ((row: FurnitureRow) => void) | undefined; onTile?: ((x: number, y: number) => void) | undefined;
   overlay?: ((project: Project) => ReactNode) | undefined;
+  onWardrobe?: (() => void) | undefined; wardrobeOpen?: boolean | undefined;
 }
 
-export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, placing, activeUid, hotspots, onItem, onTile, overlay }: IsoRoomProps) {
+/** Built-in wardrobe footprint, flush against the left wall. */
+export function wardrobeSpot(n: number) { const y0 = n * 0.45, y1 = n * 0.7; return { x0: 0, x1: 0.55, y0, y1, front: [0.95, (y0 + y1) / 2] as Pt }; }
+
+export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, placing, activeUid, hotspots, onItem, onTile, overlay, onWardrobe, wardrobeOpen }: IsoRoomProps) {
   const n = home.size;
   const iso = useMemo(() => makeIso(n), [n]);
   const [hover, setHover] = useState<Pt | null>(null);
@@ -134,7 +138,14 @@ export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, p
 
   const placed = furniture.filter((r) => r.p && itemById(r.i));
   const others = placing ? placed.filter((r) => r.u !== placing.row.u) : placed;
+  const plantAt = useMemo<Pt | null>(() => {
+    for (const [x, y] of [[n - 1, n - 1], [n - 1, 0], [0, n - 1], [Math.floor(n / 2), n - 1]] as Pt[]) {
+      if (fits(furniture.filter((r) => r.p), n, { u: "_plant", i: "plastic_chair", x, y, r: 0, p: true })) return [x + 0.5, y + 0.5];
+    }
+    return null;
+  }, [furniture, n]);
   const drawables = [
+    ...(plantAt ? [{ key: "plant", depth: plantAt[0] + plantAt[1] + 0.5, r: null as FurnitureRow | null }] : []),
     ...others.map((r) => { const d = itemDims(r); const it = itemById(r.i)!; return { key: r.u, depth: it.shape === "rug" ? -1 : r.x + r.y + d.w + d.d, r }; }),
     ...(avatar ? [{ key: "avatar", depth: avatar.depth ?? avatar.at[0] + avatar.at[1] + 1, r: null as FurnitureRow | null }] : []),
   ].sort((a, b) => a.depth - b.depth);
@@ -251,11 +262,22 @@ export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, p
           <polygon points={pts([iso(n * 0.3, n * 0.35), iso(n * 0.7, n * 0.35), iso(n * 0.7, n * 0.7), iso(n * 0.3, n * 0.7)])} style={{ fill: "oklch(0.55 0.1 45)" }} />
           <polygon points={pts([iso(n * 0.34, n * 0.39), iso(n * 0.66, n * 0.39), iso(n * 0.66, n * 0.66), iso(n * 0.34, n * 0.66)])} fill="none" style={{ stroke: "var(--gold)" }} strokeWidth="1.5" strokeDasharray="4 3" />
         </g>}
-        <g pointerEvents="none">
-          <ellipse cx={iso(0.45, 0.45)[0]} cy={iso(0.45, 0.45)[1]} rx="9" ry="4" fill="black" opacity="0.25" />
-          <path d={`M${iso(0.45, 0.45)[0] - 6} ${iso(0.45, 0.45)[1] - 12} L${iso(0.45, 0.45)[0] + 6} ${iso(0.45, 0.45)[1] - 12} L${iso(0.45, 0.45)[0] + 4.5} ${iso(0.45, 0.45)[1]} L${iso(0.45, 0.45)[0] - 4.5} ${iso(0.45, 0.45)[1]}Z`} fill="oklch(0.55 0.11 40)" />
-          <g className="anim-leaf">{[-20, -8, 6, 18, 0].map((a, i) => <ellipse key={i} cx={iso(0.45, 0.45)[0]} cy={iso(0.45, 0.45)[1] - 24} rx="3.4" ry="11" fill={i % 2 ? "oklch(0.5 0.13 150)" : "oklch(0.42 0.11 155)"} transform={`rotate(${a * 2.2} ${iso(0.45, 0.45)[0]} ${iso(0.45, 0.45)[1] - 12})`} />)}</g>
-        </g>
+        {/* built-in wardrobe: tap to change outfit */}
+        {(() => { const w = wardrobeSpot(n); const h = 92; const A = iso(w.x0, w.y0), B = iso(w.x1, w.y0), C = iso(w.x1, w.y1), D = iso(w.x0, w.y1);
+          const f0 = iso(w.x1, w.y0), f1 = iso(w.x1, w.y1); const mid = lerp(f0, f1, 0.5);
+          return (
+            <g onClick={(e) => { e.stopPropagation(); if (!placing) onWardrobe?.(); }} className={onWardrobe && !placing ? "cursor-pointer" : undefined} style={{ filter: wardrobeOpen ? "drop-shadow(0 0 7px oklch(0.8 0.14 85))" : undefined, transition: "filter .2s" }}>
+              <Box A={A} B={B} C={C} D={D} h={h} color="oklch(0.42 0.07 50)" />
+              {wardrobeOpen ? <>
+                <polygon points={pts([up(f0, 6), up(f1, 6), up(f1, h - 6), up(f0, h - 6)])} fill="oklch(0.16 0.02 40)" />
+                {[0.15, 0.3, 0.45, 0.6, 0.75, 0.88].map((t, i) => { const p = up(lerp(f0, f1, t), h - 16); return <path key={t} d={`M${p[0]} ${p[1]} l-4 6 l0 30 l8 0 l0 -30 z`} fill={["oklch(0.55 0.15 30)", "var(--gold)", "oklch(0.45 0.1 160)", "oklch(0.35 0.08 250)", "oklch(0.7 0.12 85)", "oklch(0.5 0.14 350)"][i]} className="anim-leaf" style={{ animationDelay: `${i * 0.3}s` }} />; })}
+              </> : <>
+                <polyline points={pts([up(mid, 6), up(mid, h - 6)])} stroke="oklch(0.25 0.04 50)" strokeWidth="1.2" />
+                {[0.42, 0.58].map((t) => { const p = up(lerp(f0, f1, t), h * 0.5); return <circle key={t} cx={p[0]} cy={p[1]} r="1.8" style={{ fill: "var(--gold)" }} />; })}
+                {hotspots && !placing && (() => { const tc = up(mid, h + 14); return <g pointerEvents="none"><circle cx={tc[0]} cy={tc[1]} r="5" fill="none" style={{ stroke: "var(--gold)" }} strokeWidth="1.5" className="anim-hotspot" /><circle cx={tc[0]} cy={tc[1]} r="3.2" style={{ fill: "var(--gold)" }} /></g>; })()}
+              </>}
+            </g>
+          ); })()}
 
         {/* contact shadows */}
         <g filter="url(#soft)" pointerEvents="none">
@@ -263,6 +285,16 @@ export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, p
         </g>
 
         {drawables.map((d) => {
+          if (!d.r && d.key === "plant") {
+            const c = iso(plantAt![0], plantAt![1]);
+            return (
+              <g key="plant" pointerEvents="none">
+                <ellipse cx={c[0]} cy={c[1]} rx="10" ry="4.5" fill="black" opacity="0.25" />
+                <path d={`M${c[0] - 7} ${c[1] - 14} L${c[0] + 7} ${c[1] - 14} L${c[0] + 5} ${c[1]} L${c[0] - 5} ${c[1]}Z`} fill="oklch(0.55 0.11 40)" />
+                <g className="anim-leaf">{[-20, -8, 6, 18, 0].map((ang, i) => <ellipse key={i} cx={c[0]} cy={c[1] - 28} rx="3.8" ry="13" fill={i % 2 ? "oklch(0.5 0.13 150)" : "oklch(0.42 0.11 155)"} transform={`rotate(${ang * 2.2} ${c[0]} ${c[1] - 14})`} />)}</g>
+              </g>
+            );
+          }
           if (!d.r) {
             const a = avatar!; const p = up(iso(a.at[0], a.at[1]), a.z ?? 0);
             return (
