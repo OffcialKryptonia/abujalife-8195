@@ -245,3 +245,7 @@
 html.anim-paused *, html.anim-paused *::before, html.anim-paused *::after { animation-play-state: paused !important; }
 @keyframes fade-in-soft { from { opacity: 0 } to { opacity: 1 } }
 @utility animate-fade-in { animation: fade-in-soft .25s ease-out both; }
+
+.osm-pin { transform: translate(-50%, -50%); white-space: nowrap; padding: 4px 10px; border-radius: 999px; font: 700 11px/1.2 Manrope, sans-serif; background: var(--card); color: var(--foreground); border: 1px solid var(--border); box-shadow: 0 2px 8px rgb(0 0 0 / 0.25); cursor: pointer; width: max-content; }
+.osm-pin-me { background: var(--primary); color: var(--primary-foreground); }
+.osm-pin-sel { outline: 2px solid var(--gold, var(--ring)); outline-offset: 2px; }

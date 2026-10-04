@@ -17,3 +17,4 @@
 - Game visuals are hand-built SVG + CSS keyframes (PlayerCharacter poses, IsoRoom, DayNightLighting) — no 3D engine or remote assets, keeps it light on mobile networks.
 - AI features (life coach) call Lovable AI Gateway only from server functions (`src/lib/advisor.functions.ts` → `advisor.server.ts`), with game context built server-side from the player row — keeps the key private and prompts untamperable.
 - Admin dashboard at `/admin` (`src/routes/_authenticated/admin.tsx`); roles live in `user_roles` + `has_role()`, and every admin server fn in `src/lib/admin.functions.ts` verifies the admin role before loading the service client — UI gating alone is never trusted.
+- Real-world map uses Leaflet + OpenStreetMap tiles, lazy-loaded client-side only in `RealAbujaMap` — keeps SSR safe and the game bundle small.
