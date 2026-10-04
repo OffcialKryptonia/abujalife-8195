@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      follows: {
+        Row: {
+          created_at: string
+          followee_id: string
+          follower_id: string
+        }
+        Insert: {
+          created_at?: string
+          followee_id: string
+          follower_id: string
+        }
+        Update: {
+          created_at?: string
+          followee_id?: string
+          follower_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           background: string
@@ -23,19 +83,28 @@ export type Database = {
           created_at: string
           district: string
           energy: number
+          furniture: Json
           game_minutes: number
           gender: string
           happiness: number
+          has_nin: boolean
           home_id: string
           hunger: number
+          hygiene: number
+          invest_amount: number
+          invest_start: number
           job_id: string | null
+          last_challenge_day: number
           name: string
           outfit: string
           reputation: number
           shifts: number
           skin: string
+          social: number
           updated_at: string
           user_id: string
+          vehicles: Json
+          visits: number
           xp: number
         }
         Insert: {
@@ -46,19 +115,28 @@ export type Database = {
           created_at?: string
           district?: string
           energy?: number
+          furniture?: Json
           game_minutes?: number
           gender?: string
           happiness?: number
+          has_nin?: boolean
           home_id?: string
           hunger?: number
+          hygiene?: number
+          invest_amount?: number
+          invest_start?: number
           job_id?: string | null
+          last_challenge_day?: number
           name: string
           outfit?: string
           reputation?: number
           shifts?: number
           skin?: string
+          social?: number
           updated_at?: string
           user_id: string
+          vehicles?: Json
+          visits?: number
           xp?: number
         }
         Update: {
@@ -69,20 +147,146 @@ export type Database = {
           created_at?: string
           district?: string
           energy?: number
+          furniture?: Json
           game_minutes?: number
           gender?: string
           happiness?: number
+          has_nin?: boolean
           home_id?: string
           hunger?: number
+          hygiene?: number
+          invest_amount?: number
+          invest_start?: number
           job_id?: string | null
+          last_challenge_day?: number
           name?: string
           outfit?: string
           reputation?: number
           shifts?: number
           skin?: string
+          social?: number
           updated_at?: string
           user_id?: string
+          vehicles?: Json
+          visits?: number
           xp?: number
+        }
+        Relationships: []
+      }
+      post_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          shared_post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          shared_post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          shared_post_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_shared_post_id_fkey"
+            columns: ["shared_post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string | null
+          reason: string
+          reporter_id: string
+          target_user: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          reason: string
+          reporter_id: string
+          target_user?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          reason?: string
+          reporter_id?: string
+          target_user?: string | null
         }
         Relationships: []
       }
@@ -118,7 +322,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_public_profiles: {
+        Args: never
+        Returns: {
+          district: string
+          gender: string
+          home_id: string
+          name: string
+          outfit: string
+          reputation: number
+          skin: string
+          updated_at: string
+          user_id: string
+          visits: number
+          xp: number
+        }[]
+      }
+      is_blocked: {
+        Args: { _blocked: string; _blocker: string }
+        Returns: boolean
+      }
+      visit_home: { Args: { _target: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
