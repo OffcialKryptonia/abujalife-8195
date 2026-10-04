@@ -14,7 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      players: {
+        Row: {
+          background: string
+          bank: number
+          career_xp: number
+          cash: number
+          created_at: string
+          district: string
+          energy: number
+          game_minutes: number
+          gender: string
+          happiness: number
+          home_id: string
+          hunger: number
+          job_id: string | null
+          name: string
+          outfit: string
+          reputation: number
+          shifts: number
+          skin: string
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          background: string
+          bank?: number
+          career_xp?: number
+          cash?: number
+          created_at?: string
+          district?: string
+          energy?: number
+          game_minutes?: number
+          gender?: string
+          happiness?: number
+          home_id?: string
+          hunger?: number
+          job_id?: string | null
+          name: string
+          outfit?: string
+          reputation?: number
+          shifts?: number
+          skin?: string
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          background?: string
+          bank?: number
+          career_xp?: number
+          cash?: number
+          created_at?: string
+          district?: string
+          energy?: number
+          game_minutes?: number
+          gender?: string
+          happiness?: number
+          home_id?: string
+          hunger?: number
+          job_id?: string | null
+          name?: string
+          outfit?: string
+          reputation?: number
+          shifts?: number
+          skin?: string
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          kind: string
+          label: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
