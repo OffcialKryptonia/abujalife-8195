@@ -39,7 +39,7 @@ function CreateCharacter() {
   const qc = useQueryClient();
 
   async function submit() {
-    if (name.trim().length < 2) return toast.error("Pick a name (2+ letters).");
+    if (name.trim().length < 2) { toast.error("Pick a name (2+ letters)."); return; }
     setBusy(true);
     try {
       const res = await create({ data: { name: name.trim(), gender, skin, outfit, background } });

@@ -24,7 +24,7 @@ export const DISTRICTS: District[] = [
   { id: "lugbe", name: "Lugbe", tier: 1, tagline: "Airport road grind, affordable rent.", x: 34, y: 82, landmarks: ["Airport Road", "Lugbe Market"] },
 ];
 
-export const districtById = (id: string) => DISTRICTS.find((d) => d.id === id) ?? DISTRICTS[6];
+export const districtById = (id: string) => DISTRICTS.find((d) => d.id === id) ?? DISTRICTS[6]!;
 
 export interface Job {
   id: string;
@@ -77,7 +77,7 @@ export const HOMES: Home[] = [
   { id: "asokoro_mansion", name: "Mansion, Asokoro", district: "asokoro", rent: 20000000, restEnergy: 100, restHappy: 25, prestige: 120, minLevel: 11 },
 ];
 
-export const homeById = (id: string) => HOMES.find((h) => h.id === id) ?? HOMES[0];
+export const homeById = (id: string) => HOMES.find((h) => h.id === id) ?? HOMES[0]!;
 
 export interface Food {
   id: string;
@@ -142,4 +142,4 @@ export const BACKGROUNDS: Background[] = [
   { id: "returnee", name: "Japa Returnee", story: "Back from abroad with savings and stories.", cash: 20000, bank: 180000, perk: "Big bank balance", xp: 0, rep: 0 },
 ];
 
-export const backgroundById = (id: string) => BACKGROUNDS.find((b) => b.id === id) ?? BACKGROUNDS[0];
+export const backgroundById = (id: string) => BACKGROUNDS.find((b) => b.id === id) ?? BACKGROUNDS[0]!;
