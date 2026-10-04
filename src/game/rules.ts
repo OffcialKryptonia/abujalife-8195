@@ -20,7 +20,7 @@ export type GameAction =
   | { type: "work" }
   | { type: "visit"; placeId: string }
   | { type: "order"; menuId: string }
-  | { type: "travel"; to: DistrictId; vehicle?: string }
+  | { type: "travel"; to: DistrictId; vehicle?: string | undefined }
   | { type: "applyJob"; jobId: string }
   | { type: "quitJob" }
   | { type: "moveHome"; homeId: string }
