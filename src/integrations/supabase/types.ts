@@ -76,6 +76,7 @@ export type Database = {
       }
       players: {
         Row: {
+          accessory: string
           background: string
           bank: number
           career_xp: number
@@ -86,6 +87,7 @@ export type Database = {
           furniture: Json
           game_minutes: number
           gender: string
+          hair: string
           happiness: number
           has_nin: boolean
           home_id: string
@@ -108,6 +110,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          accessory?: string
           background: string
           bank?: number
           career_xp?: number
@@ -118,6 +121,7 @@ export type Database = {
           furniture?: Json
           game_minutes?: number
           gender?: string
+          hair?: string
           happiness?: number
           has_nin?: boolean
           home_id?: string
@@ -140,6 +144,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          accessory?: string
           background?: string
           bank?: number
           career_xp?: number
@@ -150,6 +155,7 @@ export type Database = {
           furniture?: Json
           game_minutes?: number
           gender?: string
+          hair?: string
           happiness?: number
           has_nin?: boolean
           home_id?: string
