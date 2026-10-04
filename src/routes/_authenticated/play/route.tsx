@@ -1,8 +1,9 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { usePlayer } from "@/hooks/use-player";
-import { BottomNav } from "@/components/game/ui";
-import { Hud } from "@/components/game/Hud";
+import { BottomGameNav } from "@/components/game/BottomGameNav";
+import { GameHUD } from "@/components/game/Hud";
+import { GameTransition } from "@/components/game/feedback";
 import { getSoundPref, startAmbient } from "@/lib/sound";
 
 export const Route = createFileRoute("/_authenticated/play")({
@@ -17,17 +18,17 @@ function PlayLayout() {
     window.addEventListener("pointerdown", on, { once: true });
     return () => window.removeEventListener("pointerdown", on);
   }, []);
-  if (isLoading) return <div className="grid min-h-screen place-items-center bg-surface font-display text-surface-foreground/70">Entering Abuja…</div>;
+  if (isLoading) return <div className="grid min-h-screen place-items-center bg-surface-gradient font-display text-surface-foreground/70"><span className="animate-pulse">Entering Abuja…</span></div>;
   if (error) return <div className="grid min-h-screen place-items-center bg-surface text-destructive">Couldn't load your life. Refresh to retry.</div>;
   if (!player) return <Navigate to="/create" />;
 
   return (
     <div className="min-h-screen bg-surface-gradient">
-      <Hud />
+      <GameHUD />
       <main className="mx-auto max-w-3xl px-3 pb-32 pt-3">
-        <Outlet />
+        <GameTransition><Outlet /></GameTransition>
       </main>
-      <BottomNav />
+      <BottomGameNav />
     </div>
   );
 }
