@@ -251,3 +251,25 @@ export const BACKGROUNDS: Background[] = [
   { id: "returnee", name: "Japa Returnee", story: "Back from abroad with savings and stories.", cash: 20000, bank: 180000, perk: "Big bank balance", xp: 0, rep: 0 },
 ];
 export const backgroundById = (id: string) => BACKGROUNDS.find((b) => b.id === id) ?? BACKGROUNDS[0]!;
+
+// ---------- Character look (cosmetic, free to change) ----------
+export const HAIRS = [
+  { id: "fade", name: "Clean Fade" },
+  { id: "low", name: "Low Cut" },
+  { id: "afro", name: "Afro" },
+  { id: "locs", name: "Locs" },
+  { id: "braids", name: "Cornrow Braids" },
+  { id: "bun", name: "Top Bun" },
+  { id: "gele", name: "Gele Headwrap" },
+] as const;
+export const ACCESSORIES = [
+  { id: "none", name: "None" },
+  { id: "glasses", name: "Glasses" },
+  { id: "chain", name: "Gold Chain" },
+  { id: "beads", name: "Coral Beads" },
+  { id: "earrings", name: "Gold Earrings" },
+  { id: "fila", name: "Fila Cap" },
+  { id: "watch", name: "Wristwatch" },
+] as const;
+export const HAIR_IDS = HAIRS.map((h) => h.id) as [string, ...string[]];
+export const ACCESSORY_IDS = ACCESSORIES.map((a) => a.id) as [string, ...string[]];
