@@ -12,4 +12,11 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // Pre-bundle deps first used on lazy routes so dev doesn't re-optimize mid-navigation
+    // (which invalidates chunk URLs and causes "Importing a module script failed").
+    optimizeDeps: {
+      include: ["zod", "sonner", "lucide-react", "@supabase/supabase-js", "@lovable.dev/cloud-auth-js", "@radix-ui/react-label", "@radix-ui/react-slot", "class-variance-authority", "clsx", "tailwind-merge"],
+    },
+  },
 });
