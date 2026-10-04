@@ -246,6 +246,17 @@ export function IsoRoom({ home, furniture, hour, minute = 0, avatar, selected, p
         <polygon points={pts([iso(0, 0), iso(n, 0), up(iso(n, 0), 6), up(iso(0, 0), 6)])} style={{ fill: shade(home.wall, 55) }} />
         <polygon points={pts([iso(0, n), iso(0, 0), up(iso(0, 0), 6), up(iso(0, n), 6)])} style={{ fill: shade(home.wall, 50) }} />
 
+        {/* woven floor mat + potted plant in the back corner give the room a lived-in base */}
+        {!placed.some((r) => itemById(r.i)!.shape === "rug") && <g pointerEvents="none" opacity="0.85">
+          <polygon points={pts([iso(n * 0.3, n * 0.35), iso(n * 0.7, n * 0.35), iso(n * 0.7, n * 0.7), iso(n * 0.3, n * 0.7)])} style={{ fill: "oklch(0.55 0.1 45)" }} />
+          <polygon points={pts([iso(n * 0.34, n * 0.39), iso(n * 0.66, n * 0.39), iso(n * 0.66, n * 0.66), iso(n * 0.34, n * 0.66)])} fill="none" style={{ stroke: "var(--gold)" }} strokeWidth="1.5" strokeDasharray="4 3" />
+        </g>}
+        <g pointerEvents="none">
+          <ellipse cx={iso(0.45, 0.45)[0]} cy={iso(0.45, 0.45)[1]} rx="9" ry="4" fill="black" opacity="0.25" />
+          <path d={`M${iso(0.45, 0.45)[0] - 6} ${iso(0.45, 0.45)[1] - 12} L${iso(0.45, 0.45)[0] + 6} ${iso(0.45, 0.45)[1] - 12} L${iso(0.45, 0.45)[0] + 4.5} ${iso(0.45, 0.45)[1]} L${iso(0.45, 0.45)[0] - 4.5} ${iso(0.45, 0.45)[1]}Z`} fill="oklch(0.55 0.11 40)" />
+          <g className="anim-leaf">{[-20, -8, 6, 18, 0].map((a, i) => <ellipse key={i} cx={iso(0.45, 0.45)[0]} cy={iso(0.45, 0.45)[1] - 24} rx="3.4" ry="11" fill={i % 2 ? "oklch(0.5 0.13 150)" : "oklch(0.42 0.11 155)"} transform={`rotate(${a * 2.2} ${iso(0.45, 0.45)[0]} ${iso(0.45, 0.45)[1] - 12})`} />)}</g>
+        </g>
+
         {/* contact shadows */}
         <g filter="url(#soft)" pointerEvents="none">
           {others.map((r) => { const it = itemById(r.i)!; if (it.shape === "rug") return null; const { w: dw, d: dd } = itemDims(r); const s = [iso(r.x + 0.1, r.y + 0.1), iso(r.x + dw + 0.25, r.y + 0.1), iso(r.x + dw + 0.25, r.y + dd + 0.25), iso(r.x + 0.1, r.y + dd + 0.25)]; return <polygon key={r.u} points={pts(s)} fill="black" opacity={night ? 0.18 : 0.28} />; })}
