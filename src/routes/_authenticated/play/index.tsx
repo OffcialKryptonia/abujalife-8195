@@ -144,6 +144,13 @@ function HomeScreen() {
   if (nearby) cards.push({ icon: Sparkles, title: "Happening nearby", sub: nearby.name, tone: "bg-social", to: "/play/map", search: { place: nearby.id } });
 
   const avatarPose = pose ?? idlePose;
+  const ticker = [
+    `🚕 Keke traffic easing on ${districtById(p.district).name} roads`,
+    nearby ? `🎉 ${nearby.name} is live right now` : "🎶 AbujaRadio is playing Afrobeats",
+    t.hour < 12 ? "☕ Akara & pap spots are open nearby" : t.hour < 18 ? "🛍️ Wuse Market crowds are building" : "🌙 Suya spots are busy tonight",
+    job ? `💼 ${job.employer} has a shift open` : "💼 3 new jobs posted on your phone",
+    "📈 Invest app: markets ticked up today",
+  ];
 
   return (
     <div className="space-y-3">
@@ -170,7 +177,7 @@ function HomeScreen() {
       <div className="relative overflow-hidden rounded-[30px] border border-surface-foreground/10 shadow-[0_30px_60px_-25px_oklch(0_0_0/0.8)] transition-[background] duration-1000" style={{ background: light.backdrop }}>
         <IsoRoom
           home={home} furniture={p.furniture} hour={t.hour} minute={minute} selected={edit ? sel : bubble} placing={placing} activeUid={activeUid} hotspots={!edit && atHome}
-          avatar={atHome && !edit ? { skin: p.skin, outfit: p.outfit, gender: p.gender, hair: p.hair, accessory: p.accessory, at, pose: avatarPose, z: avatarZ, flip, depth: avatarDepth } : null}
+          avatar={atHome && !edit ? { skin: p.skin, outfit: p.outfit, gender: p.gender, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes, at, pose: avatarPose, z: avatarZ, flip, depth: avatarDepth } : null}
           onItem={(r) => {
             if (edit) { setSel(r.u === sel ? null : r.u); return; }
             const it = itemById(r.i);
@@ -218,6 +225,8 @@ function HomeScreen() {
           </div>
         )}
       </div>
+
+      {!edit && <CityTicker items={ticker} />}
 
       {!edit && cards.length > 0 && (
         <div className="scrollbar-none -mx-3 flex snap-x gap-2 overflow-x-auto px-3 pb-1">
@@ -290,6 +299,17 @@ function HomeScreen() {
       )}
 
       {lookOpen && <LookEditor p={p} onClose={() => setLookOpen(false)} />}
+    </div>
+  );
+}
+
+function CityTicker({ items }: { items: string[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => { const id = setInterval(() => { if (!document.hidden) setI((x) => (x + 1) % items.length); }, 5000); return () => clearInterval(id); }, [items.length]);
+  return (
+    <div className="glass flex items-center gap-2 overflow-hidden rounded-full py-1.5 pl-1.5 pr-3 text-surface-foreground">
+      <span className="flex shrink-0 items-center gap-1 rounded-full bg-gold-gradient px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-gold-foreground"><span className="size-1.5 rounded-full bg-destructive animate-pulse" />Abuja live</span>
+      <span key={i} className="truncate text-[11px] font-semibold animate-rise">{items[i]}</span>
     </div>
   );
 }

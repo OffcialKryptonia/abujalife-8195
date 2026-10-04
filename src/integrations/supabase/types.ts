@@ -84,6 +84,7 @@ export type Database = {
           created_at: string
           district: string
           energy: number
+          face: string
           furniture: Json
           game_minutes: number
           gender: string
@@ -101,6 +102,7 @@ export type Database = {
           outfit: string
           reputation: number
           shifts: number
+          shoes: string
           skin: string
           social: number
           updated_at: string
@@ -118,6 +120,7 @@ export type Database = {
           created_at?: string
           district?: string
           energy?: number
+          face?: string
           furniture?: Json
           game_minutes?: number
           gender?: string
@@ -135,6 +138,7 @@ export type Database = {
           outfit?: string
           reputation?: number
           shifts?: number
+          shoes?: string
           skin?: string
           social?: number
           updated_at?: string
@@ -152,6 +156,7 @@ export type Database = {
           created_at?: string
           district?: string
           energy?: number
+          face?: string
           furniture?: Json
           game_minutes?: number
           gender?: string
@@ -169,6 +174,7 @@ export type Database = {
           outfit?: string
           reputation?: number
           shifts?: number
+          shoes?: string
           skin?: string
           social?: number
           updated_at?: string

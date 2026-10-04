@@ -273,3 +273,19 @@ export const ACCESSORIES = [
 ] as const;
 export const HAIR_IDS = HAIRS.map((h) => h.id) as [string, ...string[]];
 export const ACCESSORY_IDS = ACCESSORIES.map((a) => a.id) as [string, ...string[]];
+export const FACES = [
+  { id: "calm", name: "Calm" },
+  { id: "bright", name: "Bright-eyed" },
+  { id: "bold", name: "Bold brows" },
+  { id: "beard", name: "Beard" },
+  { id: "dimples", name: "Dimples" },
+] as const;
+export const SHOES = [
+  { id: "sneakers", name: "Sneakers" },
+  { id: "loafers", name: "Loafers" },
+  { id: "palm", name: "Palm Slippers" },
+  { id: "heels", name: "Heels" },
+  { id: "boots", name: "Boots" },
+] as const;
+export const FACE_IDS = FACES.map((f) => f.id) as [string, ...string[]];
+export const SHOE_IDS = SHOES.map((s) => s.id) as [string, ...string[]];

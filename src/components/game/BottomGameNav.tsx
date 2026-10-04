@@ -3,6 +3,7 @@ import { Home, Map, ShoppingBag, Smartphone } from "lucide-react";
 import { useMe } from "@/hooks/use-player";
 import { challengeForDay, formatGameTime } from "@/game/rules";
 import { cn } from "@/lib/utils";
+import { haptic } from "./motion";
 
 const NAV = [
   { to: "/play", label: "Home", icon: Home, exact: true },
@@ -27,7 +28,7 @@ export function BottomGameNav() {
           const active = exact ? pathname === to || pathname === `${to}/` : pathname.startsWith(to);
           return (
             <li key={to} className="flex-1">
-              <Link to={to} activeOptions={{ exact }} aria-label={label}
+              <Link to={to} activeOptions={{ exact }} aria-label={label} onClick={() => haptic(10)}
                 className={cn("relative flex flex-col items-center gap-0.5 rounded-[22px] px-2 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 active:scale-90",
                   active ? "-translate-y-1.5 bg-gold-gradient text-gold-foreground shadow-gold" : "text-surface-foreground/55")}>
                 <Icon key={String(active)} className={cn("size-5", active && "animate-nav-pop")} strokeWidth={active ? 2.6 : 2} />

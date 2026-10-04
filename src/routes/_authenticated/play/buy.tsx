@@ -54,7 +54,7 @@ function PlacementPreview({ it, p, onClose }: { it: FurnitureItem; p: Player; on
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-surface/70 backdrop-blur-sm animate-screen-in" onClick={onClose}>
-      <div className="glass w-full max-w-lg rounded-t-[32px] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-surface-foreground" onClick={(e) => e.stopPropagation()}>
+      <div className="glass w-full max-w-lg rounded-t-[32px] animate-sheet-up p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-surface-foreground" onClick={(e) => e.stopPropagation()}>
         <div className="mb-2 flex items-center justify-between">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Try it in your room</p><h2 className="text-lg font-semibold">{it.name}</h2></div>
           <button aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-full bg-surface-foreground/10"><X className="size-4" /></button>
