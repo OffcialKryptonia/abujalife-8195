@@ -66,7 +66,7 @@ function HomeScreen() {
   if (p.energy < 35 && bed && atHome) cards.push({ icon: Bed, title: "Get some sleep", sub: itemById(bed.i)!.name, tone: "bg-energy", onClick: () => use(bed) });
   if (!claimed) cards.push({ icon: Trophy, title: "Daily challenge", sub: `${challenge.desc} · ${formatNaira(challenge.cash)}`, tone: "bg-gold", onClick: () => act.mutate({ type: "claimChallenge" }) });
   if (!job) cards.push({ icon: Briefcase, title: "Find a job", sub: "Open Jobs on your phone", tone: "bg-primary", to: "/play/phone", search: { app: "jobs" } });
-  else if (job.district !== p.district) cards.push({ icon: Briefcase, title: "Go to work", sub: `${job.employer}, ${districtById(job.district).name}`, tone: "bg-primary", to: "/play/map", search: { place: "" } });
+  else if (job.district !== p.district) cards.push({ icon: Briefcase, title: "Go to work", sub: `${job.employer}, ${districtById(job.district).name}`, tone: "bg-primary", to: "/play/map", search: { district: job.district } });
   if (nearby) cards.push({ icon: Sparkles, title: "Happening nearby", sub: nearby.name, tone: "bg-social", to: "/play/map", search: { place: nearby.id } });
 
   return (
@@ -122,7 +122,7 @@ function HomeScreen() {
             );
             const cls = "flex w-60 shrink-0 snap-start items-center gap-3 rounded-2xl border border-surface-foreground/10 bg-surface-foreground/10 p-3 text-surface-foreground backdrop-blur animate-rise";
             return c.to
-              ? <Link key={c.title} to={c.to} search={c.search} className={cls}>{inner}</Link>
+              ? <Link key={c.title} to={c.to} search={(c.search ?? {}) as never} className={cls}>{inner}</Link>
               : <button key={c.title} onClick={c.onClick} disabled={act.isPending} className={cls}>{inner}</button>;
           })}
         </div>
