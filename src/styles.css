@@ -249,3 +249,13 @@ html.anim-paused *, html.anim-paused *::before, html.anim-paused *::after { anim
 .osm-pin { transform: translate(-50%, -50%); white-space: nowrap; padding: 4px 10px; border-radius: 999px; font: 700 11px/1.2 Manrope, sans-serif; background: var(--card); color: var(--foreground); border: 1px solid var(--border); box-shadow: 0 2px 8px rgb(0 0 0 / 0.25); cursor: pointer; width: max-content; }
 .osm-pin-me { background: var(--primary); color: var(--primary-foreground); }
 .osm-pin-sel { outline: 2px solid var(--gold, var(--ring)); outline-offset: 2px; }
+
+/* World / travel */
+@keyframes scroll-x { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+@keyframes car-pass { from { transform: translateX(110vw) } to { transform: translateX(-80px) } }
+@keyframes walk-x { from { transform: translateX(-20vw) } to { transform: translateX(120vw) } }
+@keyframes rain-fall { from { background-position: 0 0 } to { background-position: -10px 40px } }
+@keyframes travel-bounce { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+@media (prefers-reduced-motion: reduce) {
+  [style*="scroll-x"], [style*="car-pass"], [style*="walk-x"], [style*="rain-fall"] { animation: none !important; }
+}
