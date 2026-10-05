@@ -20,7 +20,7 @@ export type GameAction =
   | { type: "work" }
   | { type: "visit"; placeId: string }
   | { type: "order"; menuId: string }
-  | { type: "travel"; to: DistrictId; vehicle?: string | undefined }
+  | { type: "travel"; to: DistrictId; vehicle?: string | undefined; mode?: TransportMode | undefined }
   | { type: "applyJob"; jobId: string }
   | { type: "quitJob" }
   | { type: "moveHome"; homeId: string }
@@ -77,12 +77,20 @@ export function mood(s: Pick<PlayerState, "hunger" | "energy" | "happiness" | "h
   return { label: "Struggling", emoji: "😩", score: avg };
 }
 
-export const travelCost = (from: string, to: string, vehicleId?: string) => {
+export const TRANSPORT_MODES = ["taxi", "keke", "bus", "walk"] as const;
+export type TransportMode = (typeof TRANSPORT_MODES)[number];
+export const MODE_INFO: Record<TransportMode, { name: string; fare: number; time: number; energy: number; comfort: string }> = {
+  taxi: { name: "Taxi", fare: 1, time: 1, energy: 3, comfort: "AC, quick, pricier" },
+  keke: { name: "Keke", fare: 0.55, time: 1.25, energy: 5, comfort: "Breezy, cheap, bumpy" },
+  bus: { name: "Bus", fare: 0.35, time: 1.6, energy: 6, comfort: "Cheapest, crowded" },
+  walk: { name: "Walk", fare: 0, time: 3.2, energy: 14, comfort: "Free, tiring" },
+};
+export const travelCost = (from: string, to: string, vehicleId?: string, mode: TransportMode = "taxi") => {
   const a = districtById(from), b = districtById(to);
   const dist = Math.hypot(a.x - b.x, a.y - b.y);
   const base = { price: Math.round((300 + dist * 5) / 100) * 100, minutes: Math.round(15 + dist * 0.12) };
   const v = vehicleId ? vehicleById(vehicleId) : undefined;
-  if (!v) return base;
+  if (!v) { const m = MODE_INFO[mode]; return { price: Math.round((base.price * m.fare) / 100) * 100, minutes: Math.round(base.minutes * m.time) }; }
   return { price: Math.round((base.price * v.fare) / 100) * 100, minutes: Math.round(base.minutes * v.time) };
 };
 
@@ -199,11 +207,12 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       if (!DISTRICT_IDS.includes(a.to)) throw new GameRuleError("Unknown place.");
       if (a.to === s.district) throw new GameRuleError("You're already here.");
       if (a.vehicle && !s.vehicles.includes(a.vehicle)) throw new GameRuleError("You don't own that vehicle.");
-      const t = travelCost(s.district, a.to, a.vehicle);
+      const mode = a.mode ?? "taxi";
+      const t = travelCost(s.district, a.to, a.vehicle, mode);
       if (s.cash < t.price) throw new GameRuleError("Not enough cash for the trip.");
       const n = advance(s, t.minutes);
-      const next = { ...n, district: a.to, cash: s.cash - t.price, energy: clamp(s.energy - (a.vehicle === "bicycle" ? 8 : 3)) };
-      const label = a.vehicle ? `Fuel to ${districtById(a.to).name}` : `AbujaRide to ${districtById(a.to).name}`;
+      const next = { ...n, district: a.to, cash: s.cash - t.price, energy: clamp(s.energy - (a.vehicle === "bicycle" ? 8 : a.vehicle ? 3 : MODE_INFO[mode].energy)) };
+      const label = a.vehicle ? `Fuel to ${districtById(a.to).name}` : `${MODE_INFO[mode].name} to ${districtById(a.to).name}`;
       return { next, message: `Arrived in ${districtById(a.to).name}.`, tx: t.price ? [{ amount: -t.price, label, kind: "transport" }] : [] };
     }
     case "applyJob": {

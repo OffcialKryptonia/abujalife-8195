@@ -10,7 +10,7 @@ const actionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("work") }),
   z.object({ type: z.literal("visit"), placeId: id }),
   z.object({ type: z.literal("order"), menuId: id }),
-  z.object({ type: z.literal("travel"), to: z.enum(DISTRICT_IDS), vehicle: id.optional() }),
+  z.object({ type: z.literal("travel"), to: z.enum(DISTRICT_IDS), vehicle: id.optional(), mode: z.enum(["taxi", "keke", "bus", "walk"]).optional() }),
   z.object({ type: z.literal("applyJob"), jobId: id }),
   z.object({ type: z.literal("quitJob") }),
   z.object({ type: z.literal("moveHome"), homeId: id }),
