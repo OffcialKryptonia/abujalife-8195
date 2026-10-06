@@ -18,3 +18,5 @@
 - AI features (life coach) call Lovable AI Gateway only from server functions (`src/lib/advisor.functions.ts` → `advisor.server.ts`), with game context built server-side from the player row — keeps the key private and prompts untamperable.
 - Admin dashboard at `/admin` (`src/routes/_authenticated/admin.tsx`); roles live in `user_roles` + `has_role()`, and every admin server fn in `src/lib/admin.functions.ts` verifies the admin role before loading the service client — UI gating alone is never trusted.
 - Real-world map uses Leaflet + OpenStreetMap tiles, lazy-loaded client-side only in `RealAbujaMap` — keeps SSR safe and the game bundle small.
+- Destination experiences use typed venue data in `src/game/venues.ts` and reusable SVG/CSS scenes in `src/components/game/world/VenueScene.tsx` — venue presentation stays extensible without duplicating game rules or save logic.
+- Social interactions use additive Lovable Cloud tables with participant-scoped RLS, while established direct chat and player-action APIs remain intact — social expansion cannot bypass ownership or game authority.
