@@ -16,6 +16,8 @@ const actionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("moveHome"), homeId: id }),
   z.object({ type: z.literal("deposit"), amount }),
   z.object({ type: z.literal("withdraw"), amount }),
+  z.object({ type: z.literal("exchangeNairaToDollar"), amount }),
+  z.object({ type: z.literal("exchangeDollarToNaira"), amount }),
   z.object({ type: z.literal("useItem"), uid: id }),
   z.object({ type: z.literal("buyItem"), itemId: id }),
   z.object({ type: z.literal("placeItem"), uid: id, x: z.number().int().min(0).max(20), y: z.number().int().min(0).max(20), r: z.number().int().min(0).max(3) }),
@@ -46,7 +48,7 @@ export const performAction = createServerFn({ method: "POST" })
     const n = result.next;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("players").update({
-      district: n.district, cash: n.cash, bank: n.bank, hunger: n.hunger, energy: n.energy,
+      district: n.district, cash: n.cash, bank: n.bank, usd_cash: n.usd_cash, usd_bank: n.usd_bank, hunger: n.hunger, energy: n.energy,
       happiness: n.happiness, xp: n.xp, reputation: n.reputation, job_id: n.job_id,
       career_xp: n.career_xp, shifts: n.shifts, home_id: n.home_id, game_minutes: n.game_minutes,
       hygiene: n.hygiene, social: n.social, outfit: n.outfit, furniture: n.furniture as never, vehicles: n.vehicles as never,

@@ -8,7 +8,7 @@ export interface FurnitureRow { u: string; i: string; x: number; y: number; r: n
 
 export interface PlayerState {
   name: string; district: string; outfit: string;
-  cash: number; bank: number;
+  cash: number; bank: number; usd_cash: number; usd_bank: number;
   hunger: number; energy: number; happiness: number; hygiene: number; social: number;
   xp: number; reputation: number; job_id: string | null; career_xp: number; shifts: number;
   home_id: string; game_minutes: number;
@@ -26,6 +26,8 @@ export type GameAction =
   | { type: "moveHome"; homeId: string }
   | { type: "deposit"; amount: number }
   | { type: "withdraw"; amount: number }
+  | { type: "exchangeNairaToDollar"; amount: number }
+  | { type: "exchangeDollarToNaira"; amount: number }
   | { type: "useItem"; uid: string }
   | { type: "buyItem"; itemId: string }
   | { type: "placeItem"; uid: string; x: number; y: number; r: number }
@@ -50,6 +52,11 @@ export const levelFromXp = (xp: number) => Math.floor(Math.sqrt(xp / 100)) + 1;
 export const xpForLevel = (lvl: number) => (lvl - 1) ** 2 * 100;
 export const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 export const formatNaira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
+export const formatDollar = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+/** Default in-game FX rate; can be made admin-configurable through currency_settings. */
+export const NGN_PER_USD = 1500;
+export const convertNairaToDollar = (ngn: number) => Math.floor(ngn / NGN_PER_USD);
+export const convertDollarToNaira = (usd: number) => Math.round(usd * NGN_PER_USD);
 
 export function formatGameTime(minutes: number) {
   const day = Math.floor(minutes / 1440) + 1;
@@ -247,6 +254,20 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       }
       if (amt > s.bank) throw new GameRuleError("Insufficient bank balance.");
       return { next: { ...s, cash: s.cash + amt, bank: s.bank - amt }, message: `Withdrew ${formatNaira(amt)}.`, tx: [{ amount: -amt, label: "Bank withdrawal", kind: "bank" }] };
+    }
+    case "exchangeNairaToDollar": {
+      const amt = Math.floor(a.amount);
+      if (!Number.isFinite(amt) || amt < NGN_PER_USD || amt > s.bank) throw new GameRuleError(`Use at least ${formatNaira(NGN_PER_USD)} from your bank.`);
+      const usd = convertNairaToDollar(amt);
+      if (usd < 1) throw new GameRuleError("Enter a larger naira amount.");
+      const used = usd * NGN_PER_USD;
+      return { next: { ...s, bank: s.bank - used, usd_bank: s.usd_bank + usd }, message: `Exchanged ${formatNaira(used)} for ${formatDollar(usd)}.`, tx: [{ amount: -used, label: `NGN→USD exchange (${formatDollar(usd)})`, kind: "fx" }] };
+    }
+    case "exchangeDollarToNaira": {
+      const usd = Math.floor(a.amount);
+      if (!Number.isFinite(usd) || usd <= 0 || usd > s.usd_bank) throw new GameRuleError("Insufficient dollar bank balance.");
+      const ngn = convertDollarToNaira(usd);
+      return { next: { ...s, usd_bank: s.usd_bank - usd, bank: s.bank + ngn }, message: `Exchanged ${formatDollar(usd)} for ${formatNaira(ngn)}.`, tx: [{ amount: ngn, label: `USD→NGN exchange (${formatDollar(usd)})`, kind: "fx" }] };
     }
     case "useItem": {
       const row = s.furniture.find((r) => r.u === a.uid && r.p);

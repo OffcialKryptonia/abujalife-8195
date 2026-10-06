@@ -10,7 +10,7 @@ import {
   backgroundById, DELIVERY_FEE, DISTRICTS, districtById, HOMES, homeById, JOBS, jobById, MENU, OUTFITS, outfitById,
   PHONE_GAMES, PLACES, VEHICLES, vehicleById, type DistrictId,
 } from "@/game/content";
-import { formatGameTime, formatNaira, homeComfort, investValue, isOpen, levelFromXp, mood, travelCost } from "@/game/rules";
+import { convertDollarToNaira, convertNairaToDollar, formatDollar, formatGameTime, formatNaira, homeComfort, investValue, isOpen, levelFromXp, mood, NGN_PER_USD, travelCost } from "@/game/rules";
 import { getSoundPref, playRadio, radioPlaying, setSound, stopRadio } from "@/lib/sound";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,19 +35,19 @@ export function JobsApp() {
 }
 
 export function BankApp() {
-  const p = useMe(); const act = useGameAction(); const { data: tx } = useTransactions(); const [amt, setAmt] = useState("");
-  const n = Math.floor(Number(amt));
-  return (
-    <div>
-      <Hero><p className="text-xs opacity-70">AbujaBank savings</p><p className="font-display text-3xl font-semibold">{formatNaira(p.bank)}</p><p className="text-sm opacity-70">Cash in wallet: {formatNaira(p.cash)}</p></Hero>
-      <div className="flex gap-2 px-3"><Input type="number" inputMode="numeric" placeholder="Amount ₦" value={amt} onChange={(e) => setAmt(e.target.value)} />
-        <Button disabled={act.isPending || !n} onClick={() => act.mutate({ type: "withdraw", amount: n })}>Withdraw</Button>
-        <Button variant="secondary" disabled={act.isPending || !n} onClick={() => act.mutate({ type: "deposit", amount: n })}>Deposit</Button></div>
-      <div className="mt-2 flex gap-2 px-3">{[5000, 20000, 100000].map((v) => <button key={v} onClick={() => setAmt(String(v))} className="rounded-full border px-2.5 py-1 text-xs font-semibold">{formatNaira(v)}</button>)}</div>
-      <p className="px-4 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recent activity</p>
-      {(tx ?? []).map((t) => <Row key={t.id} title={t.label} sub={new Date(t.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })} right={<span className={cn("text-sm font-bold", t.amount >= 0 ? "text-success" : "text-destructive")}>{t.amount >= 0 ? "+" : ""}{formatNaira(t.amount)}</span>} />)}
-    </div>
-  );
+  const p = useMe();
+  const act = useGameAction();
+  const [amt, setAmt] = useState("5000");
+  const [usd, setUsd] = useState("10");
+  const tx = useTransactions();
+  const n = Math.max(0, Number(amt) || 0);
+  const u = Math.max(0, Number(usd) || 0);
+  return <div>
+    <Hero><p className="text-xs opacity-70">AbujaBank · Dual Currency</p><div className="grid grid-cols-2 gap-2"><div><p className="text-[10px] uppercase opacity-60">Naira bank</p><p className="font-display text-2xl font-semibold">{formatNaira(p.bank)}</p></div><div><p className="text-[10px] uppercase opacity-60">Dollar bank</p><p className="font-display text-2xl font-semibold">{formatDollar(p.usd_bank)}</p></div></div><p className="text-sm opacity-70">Cash: {formatNaira(p.cash)} · {formatDollar(p.usd_cash)}</p></Hero>
+    <div className="px-4 pt-4"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Naira ↔ Dollar</p><p className="mt-1 text-xs text-muted-foreground">In-game exchange rate: {formatNaira(NGN_PER_USD)} = $1</p><div className="mt-2 grid grid-cols-2 gap-2"><div className="rounded-xl border p-2"><input value={amt} onChange={e=>setAmt(e.target.value)} inputMode="numeric" className="h-9 w-full bg-transparent text-sm outline-none" placeholder="Naira amount"/><button className="mt-1 w-full rounded-lg bg-primary py-2 text-xs font-bold text-primary-foreground" disabled={act.isPending || n<NGN_PER_USD || n>p.bank} onClick={()=>act.mutate({type:"exchangeNairaToDollar",amount:n})}>Buy {formatDollar(convertNairaToDollar(n))}</button></div><div className="rounded-xl border p-2"><input value={usd} onChange={e=>setUsd(e.target.value)} inputMode="numeric" className="h-9 w-full bg-transparent text-sm outline-none" placeholder="Dollar amount"/><button className="mt-1 w-full rounded-lg bg-surface-foreground py-2 text-xs font-bold text-surface" disabled={act.isPending || u<1 || u>p.usd_bank} onClick={()=>act.mutate({type:"exchangeDollarToNaira",amount:u})}>Sell {formatNaira(convertDollarToNaira(u))}</button></div></div></div>
+    <div className="mt-3 flex gap-2 px-3"><input value={amt} onChange={e=>setAmt(e.target.value)} inputMode="numeric" className="h-9 min-w-0 flex-1 rounded-xl border bg-background px-3 text-sm"/><Button size="sm" disabled={act.isPending || n<=0 || n>p.cash} onClick={()=>act.mutate({type:"deposit",amount:n})}>Deposit</Button><Button size="sm" variant="secondary" disabled={act.isPending || n<=0 || n>p.bank} onClick={()=>act.mutate({type:"withdraw",amount:n})}>Withdraw</Button></div>
+    <div className="mt-3">{(tx.data ?? []).map((t:any)=><Row key={t.id} title={t.label} sub={`${new Date(t.created_at).toLocaleString("en-NG",{dateStyle:"medium",timeStyle:"short"})} · ${t.currency ?? "NGN"}`} right={<span className={cn("text-sm font-bold",t.amount>=0?"text-success":"text-destructive")}>{t.amount>=0?"+":""}{t.currency==="USD"?formatDollar(t.amount):formatNaira(t.amount)}</span>}/>)}</div>
+  </div>;
 }
 
 export function RideApp() {
@@ -246,4 +246,32 @@ export function ProfileApp() {
       <div className="mt-4 flex flex-wrap justify-center gap-1.5">{badges.map((b) => <span key={b.name} className={b.got ? "rounded-full bg-gold-gradient px-3 py-1 text-xs font-semibold text-gold-foreground" : "rounded-full border px-3 py-1 text-xs text-muted-foreground"}>{b.name}</span>)}</div>
     </div>
   );
+}
+
+export function GameMoneyApp() {
+  const [provider, setProvider] = useState<"korapay" | "pocketfi">("korapay");
+  const [busy, setBusy] = useState(false);
+  const [phone, setPhone] = useState("");
+  const packs = [
+    { id: "gm_1000", name: "Starter", price: 1000, money: 10000 },
+    { id: "gm_5000", name: "Hustler", price: 5000, money: 55000 },
+    { id: "gm_10000", name: "Executive", price: 10000, money: 120000 },
+    { id: "gm_25000", name: "Tycoon", price: 25000, money: 325000 },
+  ];
+  const buy = async (productId: string) => {
+    setBusy(true);
+    try {
+      const { createGameMoneyCheckout } = await import("@/lib/payment.functions");
+      const result = await createGameMoneyCheckout({ data: { productId, provider, phone: phone || undefined } });
+      if (!result.checkoutUrl) throw new Error(result.configured ? "Payment checkout was not returned." : `${provider === "korapay" ? "Korapay" : "PocketFi"} is not configured yet.`);
+      window.location.href = result.checkoutUrl;
+    } catch (e) { window.alert((e as Error).message); } finally { setBusy(false); }
+  };
+  return <div>
+    <Hero className="bg-gradient-to-br from-primary to-surface"><p className="text-xs opacity-70">AbujaLife · Naira Wallet</p><p className="font-display text-2xl font-black">Top up your Naira</p><p className="mt-1 text-xs opacity-70">Real-money payments are verified server-side before value is credited.</p></Hero>
+    <div className="flex gap-2 px-3 pb-3"><button onClick={()=>setProvider("korapay")} className={cn("flex-1 rounded-xl border px-3 py-2 text-xs font-black",provider==="korapay"&&"border-primary bg-primary/10")}>Korapay</button><button onClick={()=>setProvider("pocketfi")} className={cn("flex-1 rounded-xl border px-3 py-2 text-xs font-black",provider==="pocketfi"&&"border-primary bg-primary/10")}>PocketFi</button></div>
+    {provider === "pocketfi" && <div className="px-3 pb-3"><Input inputMode="tel" placeholder="Phone number for PocketFi" value={phone} onChange={e=>setPhone(e.target.value)} /></div>}
+    {packs.map((pack)=><Row key={pack.id} title={<span>{pack.name} Pack</span>} sub={`${formatNaira(pack.price)} → ${formatNaira(pack.money)} in-game Naira`} right={<Button size="sm" disabled={busy} onClick={()=>buy(pack.id)}>Buy</Button>}/>)}
+    <p className="px-4 py-3 text-[10px] leading-4 text-muted-foreground">AbujaLife uses two spendable currencies: Nigerian Naira (₦) and US Dollars ($). Real-money top-ups credit the Naira wallet; players can exchange between wallets at the in-game FX rate.</p>
+  </div>;
 }

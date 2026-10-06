@@ -1,0 +1,32 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { Landmark, Vote, Megaphone, Shield, Users, Scale } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { ABUJA_POLITICAL_OFFICES } from "@/game/abuja-life";
+import { getPoliticalState, registerPoliticalCandidate, voteInElection } from "@/lib/political.functions";
+import { formatGameTime } from "@/game/rules";
+import { useMe } from "@/hooks/use-player";
+
+export const Route = createFileRoute("/_authenticated/play/politics")({ component: PoliticsScreen });
+function PoliticsScreen() {
+  const p = useMe();
+  const { data } = useQuery({ queryKey: ["politics"], queryFn: () => getPoliticalState() });
+  const elections = data?.elections ?? [];
+  const register = useServerFn(registerPoliticalCandidate);
+  const vote = useServerFn(voteInElection);
+  const [party, setParty] = useState("");
+  const [manifesto, setManifesto] = useState("");
+  const activeRegistration = elections.find((e:any) => e.status === "registration");
+  const registerMutation = useMutation({ mutationFn: () => register({ data: { electionId: activeRegistration!.id, officeId: activeRegistration!.office_id, party, manifesto } }), onSuccess: () => { setParty(""); setManifesto(""); alert("Candidate registration submitted."); }, onError: (e: Error) => alert(e.message) });
+  const voteMutation = useMutation({ mutationFn: (candidateId: string) => vote({ data: { electionId: elections.find((e:any)=>e.status === "voting")?.id ?? "", candidateId } }), onError: (e: Error) => alert(e.message) });
+  return <div className="space-y-4 pb-32">
+    <header className="rounded-[28px] bg-gradient-to-br from-primary/20 via-surface to-surface p-5"><div className="flex items-center gap-3"><div className="rounded-2xl bg-primary/15 p-3"><Landmark className="size-7 text-primary"/></div><div><p className="text-[10px] font-black uppercase tracking-[.24em] text-primary">FCT political life</p><h1 className="text-2xl font-black">Power is earned.</h1><p className="text-xs text-surface-foreground/60">Abuja uses FCT offices—not a state governor model.</p></div></div><div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3 text-xs text-surface-foreground/70">Your reputation: <b className="text-primary">{p.reputation}</b>. Political reputation, party affiliation and election history will build on this foundation.</div></header>
+    <section><h2 className="mb-2 text-xs font-black uppercase tracking-[.2em] text-surface-foreground/45">FCT offices</h2><div className="grid gap-2">{ABUJA_POLITICAL_OFFICES.map((o) => <div key={o.id} className="glass rounded-2xl p-3"><div className="flex items-center gap-3"><div className="rounded-xl bg-surface-foreground/5 p-2"><Shield className="size-4 text-primary"/></div><div><p className="font-black">{o.title}</p><p className="text-[10px] text-surface-foreground/50">{o.jurisdiction} · {o.elected ? "elected" : "appointed"}</p></div></div></div>)}</div></section>
+    <section><div className="mb-2 flex items-center justify-between"><h2 className="text-xs font-black uppercase tracking-[.2em] text-surface-foreground/45">Election calendar</h2><span className="text-[10px] text-surface-foreground/45">Admin controlled</span></div><div className="space-y-2">{elections.length ? elections.map((e:any)=><Election key={e.id} e={e} candidates={(data?.candidates ?? []).filter((c:any)=>c.election_id===e.id)} onVote={(id:string)=>voteMutation.mutate(id)}/>) : <div className="glass rounded-2xl p-5 text-center text-sm text-surface-foreground/55">No election has been scheduled yet. The administration controls election dates.</div>}</div></section>
+    {activeRegistration && <section className="glass rounded-2xl p-4"><div className="mb-3"><p className="text-[10px] font-black uppercase tracking-[.2em] text-primary">Candidate registration</p><h2 className="mt-1 font-black">Run for {activeRegistration.office_id}</h2><p className="text-xs text-surface-foreground/55">You can campaign, but buying Game Money does not buy votes.</p></div><input value={party} onChange={e=>setParty(e.target.value)} placeholder="Political party / platform" className="mb-2 h-10 w-full rounded-xl border bg-background px-3 text-sm"/><textarea value={manifesto} onChange={e=>setManifesto(e.target.value)} placeholder="Your manifesto (minimum 20 characters)" className="min-h-24 w-full rounded-xl border bg-background p-3 text-sm"/><button disabled={registerMutation.isPending || party.length<2 || manifesto.length<20} onClick={()=>registerMutation.mutate()} className="mt-2 w-full rounded-xl bg-primary py-3 text-sm font-black text-primary-foreground">Submit candidacy</button></section>}
+    <section className="grid grid-cols-2 gap-2"><Feature icon={Users} title="Build a network"/><Feature icon={Megaphone} title="Campaign"/><Feature icon={Vote} title="Vote"/><Feature icon={Scale} title="Public office"/></section>
+  </div>;
+}
+function Election({e,candidates,onVote}:{e:any;candidates:any[];onVote:(id:string)=>void}){return <article className="glass rounded-2xl p-4"><div className="flex items-start justify-between gap-2"><div><p className="font-black">{e.title}</p><p className="text-xs text-surface-foreground/50">{e.office_id} · {e.city.toUpperCase()}</p></div><span className="rounded-full bg-primary/10 px-2 py-1 text-[9px] font-black uppercase text-primary">{e.status}</span></div><div className="mt-3 grid grid-cols-2 gap-2 text-[10px] text-surface-foreground/60"><span>Registration<br/><b>{e.registration_opens_at ? new Date(e.registration_opens_at).toLocaleString() : "Admin sets date"}</b></span><span>Voting<br/><b>{e.voting_opens_at ? new Date(e.voting_opens_at).toLocaleString() : "Admin sets date"}</b></span></div>{candidates.length>0 && <div className="mt-3 space-y-2">{candidates.map((c:any)=><div key={c.id} className="flex items-center justify-between rounded-xl bg-surface-foreground/5 p-2"><div><p className="text-xs font-black">{c.party}</p><p className="line-clamp-1 text-[10px] text-surface-foreground/50">{c.manifesto}</p></div>{e.status === "voting" && <button onClick={()=>onVote(c.id)} className="rounded-lg bg-primary px-2 py-1 text-[10px] font-black text-primary-foreground">Vote</button>}</div>)}</div>}</article>}
+function Feature({icon:Icon,title}:{icon:typeof Users;title:string}){return <div className="glass rounded-2xl p-4"><Icon className="size-5 text-primary"/><p className="mt-2 text-xs font-black">{title}</p></div>}

@@ -52,7 +52,7 @@ export const listPlayers = createServerFn({ method: "GET" })
   .validator((d) => z.object({ search: z.string().max(60).default("") }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await adminClient(context);
-    let q = db.from("players").select("user_id,name,district,cash,bank,xp,reputation,job_id,home_id,energy,hunger,happiness,updated_at,created_at").order("updated_at", { ascending: false }).limit(200);
+    let q = db.from("players").select("user_id,name,district,cash,bank,usd_cash,usd_bank,xp,reputation,job_id,home_id,energy,hunger,happiness,updated_at,created_at").order("updated_at", { ascending: false }).limit(200);
     if (data.search) q = q.ilike("name", `%${data.search}%`);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
@@ -66,14 +66,16 @@ export const updatePlayer = createServerFn({ method: "POST" })
     userId: z.string().uuid(),
     cash: z.number().int().min(0).max(1e10),
     bank: z.number().int().min(0).max(1e10),
+    usdCash: z.number().int().min(0).max(1e10),
+    usdBank: z.number().int().min(0).max(1e10),
     xp: z.number().int().min(0).max(1e9),
     reputation: z.number().int().min(-1e6).max(1e6),
     reason: z.string().max(80).default("Admin adjustment"),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await adminClient(context);
-    const { data: before } = await db.from("players").select("cash,bank").eq("user_id", data.userId).single();
-    const { error } = await db.from("players").update({ cash: data.cash, bank: data.bank, xp: data.xp, reputation: data.reputation }).eq("user_id", data.userId);
+    const { data: before } = await db.from("players").select("cash,bank,usd_cash,usd_bank").eq("user_id", data.userId).single();
+    const { error } = await db.from("players").update({ cash: data.cash, bank: data.bank, usd_cash: data.usdCash, usd_bank: data.usdBank, xp: data.xp, reputation: data.reputation }).eq("user_id", data.userId);
     if (error) throw new Error(error.message);
     const delta = before ? data.cash + data.bank - before.cash - before.bank : 0;
     if (delta !== 0) await db.from("transactions").insert({ user_id: data.userId, amount: delta, label: data.reason, kind: "admin" });
@@ -150,4 +152,33 @@ export const listTransactions = createServerFn({ method: "GET" })
     const { data: names } = await db.from("players").select("user_id,name").in("user_id", [...new Set((tx ?? []).map((t: any) => t.user_id))]);
     const nm = Object.fromEntries((names ?? []).map((n: any) => [n.user_id, n.name]));
     return (tx ?? []).map((t: any) => ({ ...t, player: nm[t.user_id] ?? "Unknown" }));
+  });
+
+export const listElections = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const db = await adminClient(context);
+    const { data, error } = await db.from("elections").select("*").order("created_at", { ascending: false }).limit(100);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const createElection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ title: z.string().trim().min(4).max(120), city: z.string().default("abuja"), officeId: z.string().min(2).max(60), registrationOpensAt: z.string().datetime().nullable(), registrationClosesAt: z.string().datetime().nullable(), votingOpensAt: z.string().datetime().nullable(), votingClosesAt: z.string().datetime().nullable() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await adminClient(context);
+    const { data: row, error } = await db.from("elections").insert({ title: data.title, city: data.city, office_id: data.officeId, status: "draft", registration_opens_at: data.registrationOpensAt, registration_closes_at: data.registrationClosesAt, voting_opens_at: data.votingOpensAt, voting_closes_at: data.votingClosesAt, created_by: context.userId }).select().single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const setElectionStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ electionId: z.string().uuid(), status: z.enum(["draft", "registration", "campaign", "voting", "counting", "completed", "cancelled"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await adminClient(context);
+    const { error } = await db.from("elections").update({ status: data.status }).eq("id", data.electionId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

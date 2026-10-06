@@ -6,7 +6,7 @@ import { challengeForDay, formatNaira } from "@/game/rules";
 import { z } from "zod";
 import {
   ArrowLeft, Banknote, Briefcase, Car, CarFront, Gamepad2, HeartPulse, Home, Landmark, LineChart, MessageCircle, Newspaper,
-  Radio, Settings, Shield, Shirt, Sparkles, Trophy, Utensils, Users, CalendarDays, Battery, Signal, UserRound,
+  Radio, Settings, Shield, Shirt, Sparkles, Trophy, Utensils, Users, CalendarDays, Battery, Signal, UserRound, WalletCards,
 } from "lucide-react";
 import { useMe } from "@/hooks/use-player";
 import { formatGameTime } from "@/game/rules";
@@ -24,6 +24,7 @@ const APPS = [
   { id: "jobs", name: "Jobs", icon: Briefcase, tone: "bg-primary" },
   { id: "messages", name: "Messages", icon: MessageCircle, tone: "bg-success" },
   { id: "bank", name: "AbujaBank", icon: Banknote, tone: "bg-surface" },
+  { id: "game_money", name: "Game Money", icon: WalletCards, tone: "bg-primary" },
   { id: "ride", name: "AbujaRide", icon: Car, tone: "bg-gold" },
   { id: "homes", name: "AbujaHomes", icon: Home, tone: "bg-hygiene" },
   { id: "motors", name: "AbujaMotors", icon: CarFront, tone: "bg-destructive" },
@@ -70,6 +71,7 @@ function PhoneScreen() {
       case "jobs": return <A.JobsApp />;
       case "messages": return <MessagesApp key={chatWith ?? "list"} initialPeer={chatWith} />;
       case "bank": return <A.BankApp />;
+      case "game_money": return <A.GameMoneyApp />;
       case "ride": return <A.RideApp />;
       case "homes": return <A.HomesApp />;
       case "motors": return <A.MotorsApp />;

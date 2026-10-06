@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Activity, Banknote, Flag, LayoutDashboard, MessageSquare, Newspaper, Shield, Trash2, Users, ArrowLeft } from "lucide-react";
+import { Activity, Banknote, Flag, LayoutDashboard, MessageSquare, Newspaper, Shield, Trash2, Users, ArrowLeft, Vote } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-  checkAdmin, deletePost, getAdminOverview, listPlayers, listPosts, listReports, listTransactions, resolveReport, setRole, updatePlayer,
+  checkAdmin, createElection, deletePost, getAdminOverview, listElections, listPlayers, listPosts, listReports, listTransactions, resolveReport, setElectionStatus, setRole, updatePlayer,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -68,12 +68,14 @@ function AdminPage() {
             <TabsTrigger value="reports"><Flag className="mr-1 h-4 w-4" />Reports</TabsTrigger>
             <TabsTrigger value="posts"><Newspaper className="mr-1 h-4 w-4" />Feed</TabsTrigger>
             <TabsTrigger value="economy"><Banknote className="mr-1 h-4 w-4" />Economy</TabsTrigger>
+            <TabsTrigger value="elections"><Vote className="mr-1 h-4 w-4" />Elections</TabsTrigger>
           </TabsList>
           <TabsContent value="overview"><Overview /></TabsContent>
           <TabsContent value="players"><Players /></TabsContent>
           <TabsContent value="reports"><Reports /></TabsContent>
           <TabsContent value="posts"><Posts /></TabsContent>
           <TabsContent value="economy"><Economy /></TabsContent>
+          <TabsContent value="elections"><Elections /></TabsContent>
         </Tabs>
       </main>
     </div>
@@ -180,7 +182,7 @@ function Players() {
 }
 
 function EditPlayer({ player, onClose }: { player: PlayerRow; onClose: () => void }) {
-  const [v, setV] = useState({ cash: player.cash, bank: player.bank, xp: player.xp, reputation: player.reputation, reason: "Admin adjustment" });
+  const [v, setV] = useState({ cash: player.cash, bank: player.bank, usdCash: player.usd_cash ?? 0, usdBank: player.usd_bank ?? 0, xp: player.xp, reputation: player.reputation, reason: "Admin adjustment" });
   const fn = useServerFn(updatePlayer);
   const qc = useQueryClient();
   const save = useMutation({
@@ -188,14 +190,14 @@ function EditPlayer({ player, onClose }: { player: PlayerRow; onClose: () => voi
     onSuccess: () => { toast.success("Player updated"); qc.invalidateQueries({ queryKey: ["admin"] }); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const num = (k: "cash" | "bank" | "xp" | "reputation") => (
+  const num = (k: "cash" | "bank" | "usdCash" | "usdBank" | "xp" | "reputation") => (
     <div className="space-y-1"><Label className="capitalize">{k}</Label><Input type="number" value={v[k]} onChange={(e) => setV({ ...v, [k]: Math.trunc(Number(e.target.value) || 0) })} /></div>
   );
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader><DialogTitle>Edit {player.name}</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">{num("cash")}{num("bank")}{num("xp")}{num("reputation")}</div>
+        <div className="grid grid-cols-2 gap-3">{num("cash")}{num("bank")}{num("usdCash")}{num("usdBank")}{num("xp")}{num("reputation")}</div>
         <div className="space-y-1"><Label>Reason (shown in their bank history)</Label><Input value={v.reason} maxLength={80} onChange={(e) => setV({ ...v, reason: e.target.value })} /></div>
         <Button onClick={() => save.mutate()} disabled={save.isPending}>Save changes</Button>
       </DialogContent>
@@ -313,4 +315,32 @@ function Economy() {
       </Card>
     </div>
   );
+}
+
+
+function Elections() {
+  const fn = useServerFn(listElections);
+  const create = useServerFn(createElection);
+  const statusFn = useServerFn(setElectionStatus);
+  const qc = useQueryClient();
+  const { data } = useQuery({ queryKey: ["admin", "elections"], queryFn: () => fn() });
+  const [form, setForm] = useState({ title: "", officeId: "fct_senator", registrationOpensAt: "", registrationClosesAt: "", votingOpensAt: "", votingClosesAt: "" });
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (!form.title.trim()) return toast.error("Add an election title.");
+    setBusy(true);
+    try {
+      await create({ data: { title: form.title, city: "abuja", officeId: form.officeId, registrationOpensAt: form.registrationOpensAt ? new Date(form.registrationOpensAt).toISOString() : null, registrationClosesAt: form.registrationClosesAt ? new Date(form.registrationClosesAt).toISOString() : null, votingOpensAt: form.votingOpensAt ? new Date(form.votingOpensAt).toISOString() : null, votingClosesAt: form.votingClosesAt ? new Date(form.votingClosesAt).toISOString() : null } });
+      toast.success("Election created"); setForm({ ...form, title: "" }); qc.invalidateQueries({ queryKey: ["admin", "elections"] });
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  return <div className="space-y-4">
+    <Card><CardHeader><CardTitle className="text-base">Election control room</CardTitle></CardHeader><CardContent className="space-y-3">
+      <p className="text-sm text-muted-foreground">Admin controls the election calendar. Abuja uses FCT political offices; state governor elections belong to the later state-city systems.</p>
+      <div className="grid gap-3 md:grid-cols-2"><div className="space-y-1"><Label>Election title</Label><Input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="FCT Senatorial Election"/></div><div className="space-y-1"><Label>Office</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={form.officeId} onChange={e=>setForm({...form,officeId:e.target.value})}><option value="fct_senator">FCT Senator</option><option value="fct_rep">House of Representatives</option><option value="area_chairman">Area Council Chairman</option><option value="area_councillor">Area Council Councillor</option></select></div></div>
+      <div className="grid gap-3 md:grid-cols-4">{([["registrationOpensAt","Registration opens"],["registrationClosesAt","Registration closes"],["votingOpensAt","Voting opens"],["votingClosesAt","Voting closes"]] as const).map(([k,l])=><div key={k} className="space-y-1"><Label>{l}</Label><Input type="datetime-local" value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></div>)}</div>
+      <Button onClick={submit} disabled={busy}>Create election</Button>
+    </CardContent></Card>
+    <Card><CardHeader><CardTitle className="text-base">Scheduled elections</CardTitle></CardHeader><CardContent className="space-y-2">{(data??[]).map((e:any)=><div key={e.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"><div><b>{e.title}</b><div className="text-xs text-muted-foreground">{e.office_id} · {e.voting_opens_at ? when(e.voting_opens_at) : "No voting time"}</div></div><div className="flex gap-1">{["registration","campaign","voting","counting","completed","cancelled"].map((st)=><Button key={st} size="sm" variant={e.status===st?"default":"outline"} onClick={async()=>{try{await statusFn({data:{electionId:e.id,status:st as any}});qc.invalidateQueries({queryKey:["admin","elections"]})}catch(err){toast.error((err as Error).message)}}}>{st}</Button>)}</div></div>)}{!data?.length&&<p className="text-sm text-muted-foreground">No elections scheduled.</p>}</CardContent></Card>
+  </div>;
 }

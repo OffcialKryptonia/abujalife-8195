@@ -221,10 +221,18 @@ export const DELIVERY_FEE = 1000;
 
 // ---------- Vehicles ----------
 export const VEHICLES = [
-  { id: "bicycle", name: "Bicycle", price: 45000, fare: 0, time: 1.4, rep: 0, desc: "Free rides, slow and sweaty." },
-  { id: "okada", name: "Motorbike", price: 650000, fare: 0.3, time: 0.7, rep: 2, desc: "Beat the traffic, mind the rain." },
-  { id: "tokunbo", name: "Tokunbo Saloon Car", price: 4500000, fare: 0.4, time: 0.6, rep: 10, desc: "Clean foreign-used, AC working." },
-  { id: "suv", name: "Executive SUV", price: 18000000, fare: 0.5, time: 0.55, rep: 40, desc: "Tinted, armoured confidence." },
+  { id: "bicycle", name: "City Bicycle", price: 45000, fare: 0, time: 1.4, rep: 0, desc: "Cheap, healthy and very Abuja-in-the-morning." },
+  { id: "okada", name: "Motorbike", price: 650000, fare: 0.3, time: 0.7, rep: 2, desc: "Fast through traffic; weather matters." },
+  { id: "tokunbo", name: "Tokunbo Saloon", price: 4500000, fare: 0.4, time: 0.6, rep: 10, desc: "Foreign-used saloon with working AC." },
+  { id: "corolla", name: "Executive Saloon", price: 9500000, fare: 0.43, time: 0.52, rep: 22, desc: "Reliable executive transport for work and city life." },
+  { id: "suv", name: "Executive SUV", price: 18000000, fare: 0.5, time: 0.48, rep: 40, desc: "Comfortable SUV for everyday Abuja movement." },
+  { id: "range_rover", name: "Range Rover Autobiography", price: 165000000, fare: 0.65, time: 0.34, rep: 180, desc: "Flagship luxury SUV with serious status." },
+  { id: "g_wagon", name: "Mercedes-AMG G 63", price: 185000000, fare: 0.68, time: 0.32, rep: 200, desc: "High-profile luxury performance SUV." },
+  { id: "maybach", name: "Mercedes-Maybach S-Class", price: 240000000, fare: 0.72, time: 0.3, rep: 240, desc: "Rear-seat executive luxury." },
+  { id: "bentley", name: "Bentley Flying Spur", price: 320000000, fare: 0.75, time: 0.28, rep: 300, desc: "Ultra-luxury grand touring sedan." },
+  { id: "rolls_royce", name: "Rolls-Royce Ghost", price: 520000000, fare: 0.8, time: 0.25, rep: 450, desc: "Peak prestige mobility." },
+  { id: "helicopter", name: "Executive Helicopter", price: 1800000000, fare: 1.2, time: 0.12, rep: 800, desc: "Private rotorcraft for premium travel." },
+  { id: "private_jet", name: "Light Private Jet", price: 6500000000, fare: 1.5, time: 0.08, rep: 1500, desc: "Private aviation for inter-city and VIP travel." },
 ];
 export const vehicleById = (id: string) => VEHICLES.find((v) => v.id === id);
 

@@ -187,6 +187,8 @@ export type Database = {
           bank: number
           career_xp: number
           cash: number
+          usd_cash: number
+          usd_bank: number
           created_at: string
           district: string
           energy: number
@@ -223,6 +225,8 @@ export type Database = {
           bank?: number
           career_xp?: number
           cash?: number
+          usd_cash?: number
+          usd_bank?: number
           created_at?: string
           district?: string
           energy?: number
@@ -259,6 +263,8 @@ export type Database = {
           bank?: number
           career_xp?: number
           cash?: number
+          usd_cash?: number
+          usd_bank?: number
           created_at?: string
           district?: string
           energy?: number

@@ -13,6 +13,7 @@ import { districtById, homeById, itemById, jobById, PLACES, type FurnitureItem }
 import { challengeForDay, findSpot, formatGameTime, formatNaira, homeComfort, isOpen, itemDims, type FurnitureRow } from "@/game/rules";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AbujaLifeHub } from "@/components/game/AbujaLifeHub";
 
 export const Route = createFileRoute("/_authenticated/play/")({
   head: () => ({ meta: [{ title: "Home — AbujaLife" }, { name: "description", content: "Live in your Abuja home: sleep, cook, shower and furnish." }, { property: "og:title", content: "Home — AbujaLife" }, { property: "og:description", content: "Your home in virtual Abuja." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -243,6 +244,7 @@ function HomeScreen() {
       </div>
 
       {!edit && <CityTicker items={ticker} />}
+      {!edit && <AbujaLifeHub look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} cash={p.cash} reputation={p.reputation} />}
       {!edit && <CoachCard cash={p.cash} />}
 
       {!edit && cards.length > 0 && (

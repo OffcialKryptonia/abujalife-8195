@@ -22,6 +22,8 @@ import { Route as AuthenticatedPlayMapRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPlayPhoneRouteImport } from './routes/_authenticated/play/phone'
 import { Route as AuthenticatedPlayPlaceDistrictIdRouteImport } from './routes/_authenticated/play/place.$districtId'
 import { Route as AuthenticatedPlayVisitUserIdRouteImport } from './routes/_authenticated/play/visit.$userId'
+import { Route as AuthenticatedPlayEducationRouteImport } from './routes/_authenticated/play/education'
+import { Route as AuthenticatedPlayPoliticsRouteImport } from './routes/_authenticated/play/politics'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -83,6 +85,16 @@ const AuthenticatedPlayPlaceDistrictIdRoute =
     path: '/place/$districtId',
     getParentRoute: () => AuthenticatedPlayRouteRoute,
   } as any)
+const AuthenticatedPlayEducationRoute = AuthenticatedPlayEducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => AuthenticatedPlayRouteRoute,
+} as any)
+const AuthenticatedPlayPoliticsRoute = AuthenticatedPlayPoliticsRouteImport.update({
+  id: '/politics',
+  path: '/politics',
+  getParentRoute: () => AuthenticatedPlayRouteRoute,
+} as any)
 const AuthenticatedPlayVisitUserIdRoute =
   AuthenticatedPlayVisitUserIdRouteImport.update({
     id: '/visit/$userId',
@@ -103,6 +115,8 @@ export interface FileRoutesByFullPath {
   '/play/': typeof AuthenticatedPlayIndexRoute
   '/play/place/$districtId': typeof AuthenticatedPlayPlaceDistrictIdRoute
   '/play/visit/$userId': typeof AuthenticatedPlayVisitUserIdRoute
+  '/play/education': typeof AuthenticatedPlayEducationRoute
+  '/play/politics': typeof AuthenticatedPlayPoliticsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -116,6 +130,8 @@ export interface FileRoutesByTo {
   '/play': typeof AuthenticatedPlayIndexRoute
   '/play/place/$districtId': typeof AuthenticatedPlayPlaceDistrictIdRoute
   '/play/visit/$userId': typeof AuthenticatedPlayVisitUserIdRoute
+  '/play/education': typeof AuthenticatedPlayEducationRoute
+  '/play/politics': typeof AuthenticatedPlayPoliticsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -132,6 +148,8 @@ export interface FileRoutesById {
   '/_authenticated/play/': typeof AuthenticatedPlayIndexRoute
   '/_authenticated/play/place/$districtId': typeof AuthenticatedPlayPlaceDistrictIdRoute
   '/_authenticated/play/visit/$userId': typeof AuthenticatedPlayVisitUserIdRoute
+  '/_authenticated/play/education': typeof AuthenticatedPlayEducationRoute
+  '/_authenticated/play/politics': typeof AuthenticatedPlayPoliticsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -148,6 +166,8 @@ export interface FileRouteTypes {
     | '/play/'
     | '/play/place/$districtId'
     | '/play/visit/$userId'
+    | '/play/education'
+    | '/play/politics'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +181,8 @@ export interface FileRouteTypes {
     | '/play'
     | '/play/place/$districtId'
     | '/play/visit/$userId'
+    | '/play/education'
+    | '/play/politics'
   id:
     | '__root__'
     | '/'
@@ -176,6 +198,8 @@ export interface FileRouteTypes {
     | '/_authenticated/play/'
     | '/_authenticated/play/place/$districtId'
     | '/_authenticated/play/visit/$userId'
+    | '/_authenticated/play/education'
+    | '/_authenticated/play/politics'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -271,6 +295,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayPlaceDistrictIdRouteImport
       parentRoute: typeof AuthenticatedPlayRouteRoute
     }
+    '/_authenticated/play/education': {
+      id: '/_authenticated/play/education'
+      path: '/education'
+      fullPath: '/play/education'
+      preLoaderRoute: typeof AuthenticatedPlayEducationRouteImport
+      parentRoute: typeof AuthenticatedPlayRouteRoute
+    }
+    '/_authenticated/play/politics': {
+      id: '/_authenticated/play/politics'
+      path: '/politics'
+      fullPath: '/play/politics'
+      preLoaderRoute: typeof AuthenticatedPlayPoliticsRouteImport
+      parentRoute: typeof AuthenticatedPlayRouteRoute
+    }
     '/_authenticated/play/visit/$userId': {
       id: '/_authenticated/play/visit/$userId'
       path: '/visit/$userId'
@@ -288,6 +326,8 @@ interface AuthenticatedPlayRouteRouteChildren {
   AuthenticatedPlayIndexRoute: typeof AuthenticatedPlayIndexRoute
   AuthenticatedPlayPlaceDistrictIdRoute: typeof AuthenticatedPlayPlaceDistrictIdRoute
   AuthenticatedPlayVisitUserIdRoute: typeof AuthenticatedPlayVisitUserIdRoute
+  AuthenticatedPlayEducationRoute: typeof AuthenticatedPlayEducationRoute
+  AuthenticatedPlayPoliticsRoute: typeof AuthenticatedPlayPoliticsRoute
 }
 
 const AuthenticatedPlayRouteRouteChildren: AuthenticatedPlayRouteRouteChildren =
@@ -299,6 +339,8 @@ const AuthenticatedPlayRouteRouteChildren: AuthenticatedPlayRouteRouteChildren =
     AuthenticatedPlayPlaceDistrictIdRoute:
       AuthenticatedPlayPlaceDistrictIdRoute,
     AuthenticatedPlayVisitUserIdRoute: AuthenticatedPlayVisitUserIdRoute,
+    AuthenticatedPlayEducationRoute: AuthenticatedPlayEducationRoute,
+    AuthenticatedPlayPoliticsRoute: AuthenticatedPlayPoliticsRoute,
   }
 
 const AuthenticatedPlayRouteRouteWithChildren =
