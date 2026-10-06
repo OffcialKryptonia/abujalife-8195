@@ -97,11 +97,11 @@ function PhoneScreen() {
   return (
     <div className="flex justify-center">
       <div className="relative w-full max-w-[400px] rounded-[2.6rem] border-[10px] border-surface bg-surface shadow-[0_30px_80px_-20px_oklch(0_0_0/0.7)] ring-1 ring-surface-foreground/15">
-        <div className="absolute left-1/2 top-2 z-20 h-5 w-24 -translate-x-1/2 rounded-full bg-surface" />
+        <div className="pointer-events-none absolute left-1/2 top-1.5 z-[60] h-6 w-28 -translate-x-1/2 rounded-full bg-black shadow-inner" aria-hidden="true" />
         <div className="relative flex h-[calc(100dvh-220px)] min-h-[520px] flex-col overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_20%_10%,var(--gold)_-40%,transparent_45%),radial-gradient(circle_at_90%_90%,var(--primary),var(--surface)_70%)]">
-          <div className="relative z-30 flex items-center justify-between px-6 pb-1 pt-2.5 text-[11px] font-bold text-surface-foreground">
+          <div className="relative z-40 flex items-center justify-between px-6 pb-1 pt-2.5 text-[11px] font-bold text-surface-foreground">
             <span>{t.clock.replace(/ (AM|PM)/, "")}</span>
-            <span className="flex items-center gap-1"><Signal className="size-3" />AbjNet 5G<span className="ml-1 tabular-nums">{Math.max(12, p.energy)}%</span><Battery className="size-4" /></span>
+            <span className="flex max-w-[108px] items-center justify-end gap-1.5 overflow-hidden"><span className="truncate">5G</span><span className="tabular-nums">{Math.max(12, p.energy)}%</span><Signal className="size-3 shrink-0" /><Battery className="size-4 shrink-0" /></span>
           </div>
           {locked && (
             <button onClick={unlock} aria-label="Unlock phone" className={cn("absolute inset-0 z-20 flex flex-col items-center bg-[radial-gradient(circle_at_50%_25%,var(--primary),var(--surface)_75%)] pt-20 text-surface-foreground", unlocking && "animate-unlock")}>
@@ -128,7 +128,7 @@ function PhoneScreen() {
               <div className="min-h-0 flex-1 overflow-y-auto">{body()}</div>
             </div>
           ) : (
-            <div className="flex flex-1 flex-col px-4">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4">
               <div className="py-4 text-center text-surface-foreground">
                 <p className="font-display text-5xl font-semibold tracking-tight">{t.clock.replace(/ (AM|PM)/, "")}</p>
                 <p className="text-sm opacity-75">{t.weekday} · Day {t.day} · Abuja</p>
@@ -137,7 +137,7 @@ function PhoneScreen() {
                 <div><p className="text-[10px] font-bold uppercase tracking-wider opacity-60">AbujaBank</p><p className="font-display text-lg font-bold">{formatNaira(p.cash + p.bank)}</p></div>
                 <div className="text-right"><p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Today</p><p className="text-xs font-semibold">{p.job_id ? "Shift available" : "Find a job"}</p></div>
               </div>
-              <div className="grid grid-cols-4 gap-x-2 gap-y-4">
+              <div className="grid grid-cols-4 gap-x-2 gap-y-4 pb-2">
                 {APPS.filter((a) => !DOCK.includes(a.id)).map((a, i) => (
                   <button key={a.id} onClick={() => open(a.id)} className="relative flex flex-col items-center gap-1 transition-transform active:scale-90 animate-rise" style={{ animationDelay: `${i * 25}ms` }}>
                     <AppIcon a={a} badge={badges[a.id]} />
