@@ -191,20 +191,20 @@ export function PeopleApp({ openProfile }: { openProfile: (id: string) => void }
   const { data } = useProfiles();
   const { data: blocks } = useBlocks();
   const [q, setQ] = useState("");
-  const [requests, setRequests] = useState<{ id: string; requester_id: string; recipient_id: string; status: string }[]>([]);
-  const [requestsReady, setRequestsReady] = useState(false);
-  useMemo(() => {
-    let active = true;
-    void supabase.from("friend_requests").select("id, requester_id, recipient_id, status")
-      .or(`requester_id.eq.${me.user_id},recipient_id.eq.${me.user_id}`)
-      .then(({ data: rows }) => { if (active) { setRequests(rows ?? []); setRequestsReady(true); } });
-    return () => { active = false; };
-  }, [me.user_id]);
+  const { data: requests = [], isLoading: requestsLoading } = useQuery({
+    queryKey: ["friend-requests", me.user_id],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase.from("friend_requests").select("id, requester_id, recipient_id, status")
+        .or(`requester_id.eq.${me.user_id},recipient_id.eq.${me.user_id}`);
+      if (error) throw error;
+      return rows;
+    },
+  });
   const refreshRequests = async () => {
-    const { data: rows } = await supabase.from("friend_requests").select("id, requester_id, recipient_id, status")
-      .or(`requester_id.eq.${me.user_id},recipient_id.eq.${me.user_id}`);
-    setRequests(rows ?? []);
-    await qc.invalidateQueries({ queryKey: ["profiles"] });
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["friend-requests", me.user_id] }),
+      qc.invalidateQueries({ queryKey: ["accepted-friends", me.user_id] }),
+    ]);
   };
   const requestTo = async (id: string) => {
     const { error } = await supabase.from("friend_requests").insert({ requester_id: me.user_id, recipient_id: id });
@@ -229,7 +229,7 @@ export function PeopleApp({ openProfile }: { openProfile: (id: string) => void }
         <div key={p.user_id} className="flex items-center gap-3 border-b px-3 py-2.5">
           <button onClick={() => openProfile(p.user_id)} className="relative shrink-0"><Avatar name={p.name} skin={p.skin} size={38} />{isOnline(p) && <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-card bg-success" />}</button>
           <button onClick={() => openProfile(p.user_id)} className="min-w-0 flex-1 text-left"><p className="truncate text-sm font-semibold">{p.name}</p><p className="text-xs text-muted-foreground">LV {levelFromXp(p.xp)} · {districtById(p.district).name}</p></button>
-          {!requestsReady ? null : friends.includes(p.user_id) ? <span className="text-xs font-semibold text-success">Friends</span> : requests.some((r) => (r.requester_id === me.user_id && r.recipient_id === p.user_id) || (r.requester_id === p.user_id && r.recipient_id === me.user_id)) ? <span className="text-[10px] font-semibold text-muted-foreground">{requests.find((r) => (r.requester_id === me.user_id && r.recipient_id === p.user_id) || (r.requester_id === p.user_id && r.recipient_id === me.user_id))?.status === "pending" ? (requests.find((r) => r.requester_id === me.user_id && r.recipient_id === p.user_id) ? "Sent" : "Pending") : "Declined"}</span> : <Button variant="outline" size="sm" onClick={() => void requestTo(p.user_id)} aria-label={`Add ${p.name} as a friend`}><UserPlus className="size-4" /></Button>}
+          {requestsLoading ? null : friends.includes(p.user_id) ? <span className="text-xs font-semibold text-success">Friends</span> : requests.some((r) => (r.requester_id === me.user_id && r.recipient_id === p.user_id) || (r.requester_id === p.user_id && r.recipient_id === me.user_id)) ? <span className="text-[10px] font-semibold text-muted-foreground">{requests.find((r) => (r.requester_id === me.user_id && r.recipient_id === p.user_id) || (r.requester_id === p.user_id && r.recipient_id === me.user_id))?.status === "pending" ? (requests.find((r) => r.requester_id === me.user_id && r.recipient_id === p.user_id) ? "Sent" : "Pending") : "Declined"}</span> : <Button variant="outline" size="sm" onClick={() => void requestTo(p.user_id)} aria-label={`Add ${p.name} as a friend`}><UserPlus className="size-4" /></Button>}
         </div>
       ))}
     </div>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Briefcase, Building2, Bus, Car, Clock, HeartPulse, Landmark, Megaphone, PartyPopper, ShoppingBag, Users, Utensils, X, Home as HomeIcon, Navigation, Map as MapIcon } from "lucide-react";
 const RealAbujaMap = lazy(() => import("@/components/game/RealAbujaMap"));
@@ -6,12 +6,14 @@ import { z } from "zod";
 import { useGameAction, useMe, useProfiles, isOnline } from "@/hooks/use-player";
 import { AbujaWorld, WORLD_H, WORLD_W } from "@/components/game/AbujaWorld";
 import { DISTRICTS, HOMES, JOBS, PLACES, districtById, homeById, jobById, vehicleById, type DistrictId, type PlaceCat, type Place } from "@/game/content";
-import { formatGameTime, formatNaira, isOpen, levelFromXp, travelCost } from "@/game/rules";
+import { formatGameTime, formatNaira, isOpen, levelFromXp, travelCost, MODE_INFO, type TransportMode } from "@/game/rules";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { lightFor } from "@/components/game/DayNightLighting";
 import { PlayerCharacter } from "@/components/game/PlayerCharacter";
 import { haptic } from "@/components/game/motion";
+import { TravelSequence } from "@/components/game/world/TravelSequence";
+import { destinationFor, weatherFor } from "@/game/destinations";
 
 export const Route = createFileRoute("/_authenticated/play/map")({
   validateSearch: z.object({ place: z.string().optional(), district: z.string().optional() }),
@@ -33,6 +35,7 @@ const S = 1.6; // render scale (px per world unit)
 function MapScreen() {
   const p = useMe();
   const act = useGameAction();
+  const navigate = useNavigate();
   const search = Route.useSearch();
   const { data: profiles } = useProfiles();
   const t = formatGameTime(p.game_minutes);
@@ -40,6 +43,8 @@ function MapScreen() {
   const [selPlace, setSelPlace] = useState<string | null>(search.place || null);
   const [selDistrict, setSelDistrict] = useState<string | null>(search.district ?? (search.place ? null : null));
   const [vehicle, setVehicle] = useState<string | undefined>(undefined);
+  const [mode, setMode] = useState<TransportMode>("taxi");
+  const [travelScene, setTravelScene] = useState<{ from: string; destination: string; hour: number; weather: ReturnType<typeof weatherFor>; modeName: string } | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [real, setReal] = useState(false);
 
@@ -70,11 +75,27 @@ function MapScreen() {
   const jobOf = focus?.jobId ? jobById(focus.jobId) : undefined;
   const homeOf = focus?.homeId ? homeById(focus.homeId) : undefined;
   const here = focusD?.id === p.district;
-  const trip = focusD && !here ? travelCost(p.district, focusD.id, vehicle) : null;
+  const trip = focusD && !here ? travelCost(p.district, focusD.id, vehicle, mode) : null;
   const level = levelFromXp(p.xp);
 
   const light = lightFor(t.hour);
   const FocusIcon = focus ? CAT_ICON[focus.cat] : Navigation;
+
+  const beginTravel = async () => {
+    if (!focusD || !trip) return;
+    const startDistrict = districtById(p.district);
+    const destination = focusD;
+    const arrivalVenue = focus ? WUSE2_VENUES.find((venue) => venue.activityId === focus.id)?.id : undefined;
+    const result = await act.mutateAsync({ type: "travel", to: destination.id as DistrictId, vehicle, mode });
+    if (result.ok) {
+      setTravelScene({ from: startDistrict.name, destination: destination.id, venue: arrivalVenue, hour: t.hour, weather: weatherFor(p.game_minutes), modeName: vehicle ? vehicleById(vehicle)?.name ?? "Personal vehicle" : MODE_INFO[mode].name });
+    }
+  };
+
+  if (travelScene) {
+    const dest = destinationFor(travelScene.destination);
+    return <TravelSequence from={travelScene.from} dest={dest} hour={travelScene.hour} weather={travelScene.weather} modeName={travelScene.modeName} look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} onDone={() => { setTravelScene(null); void navigate({ to: "/play/place/$districtId", params: { districtId: travelScene.destination }, search: travelScene.venue ? { venue: travelScene.venue } : {} }); }} />;
+  }
 
   return (
     <div className="-mx-3 -mt-3">
@@ -163,12 +184,15 @@ function MapScreen() {
 
           {!here && trip && (
             <div className="mt-3">
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Choose your ride</p>
+              <div className="scrollbar-none mb-2 flex gap-1.5 overflow-x-auto">{(["taxi", "keke", "bus", "walk"] as const).map((option) => <button key={option} type="button" aria-pressed={mode === option} onClick={() => { setMode(option); setVehicle(undefined); }} className={cn("shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold", mode === option && "border-gold bg-gold/15 text-gold")}>{MODE_INFO[option].name}<span className="ml-1.5 font-normal opacity-70">{option === "walk" ? "Free" : formatNaira(travelCost(p.district, focusD.id, undefined, option).price)}</span></button>)}</div>
               {p.vehicles.length > 0 && (
                 <div className="mb-2 flex gap-1.5">
                   {[undefined, ...p.vehicles].map((v) => <button key={v ?? "ride"} onClick={() => setVehicle(v)} className={cn("rounded-full border px-2.5 py-1 text-[11px] font-bold", vehicle === v && "border-primary bg-primary text-primary-foreground")}>{v ? vehicleById(v)?.name : "AbujaRide"}</button>)}
                 </div>
               )}
-              <Button className="h-12 w-full bg-gold-gradient text-gold-foreground shadow-gold" disabled={act.isPending || p.cash < trip.price} onClick={() => act.mutate({ type: "travel", to: focusD.id as DistrictId, vehicle })}>
+              <p className="mb-2 text-center text-[11px] text-muted-foreground">{MODE_INFO[mode].comfort} · about {trip.minutes} min · {mode === "walk" ? `${MODE_INFO.walk.energy} energy` : `${mode === "keke" ? MODE_INFO.keke.energy : mode === "bus" ? MODE_INFO.bus.energy : MODE_INFO.taxi.energy} energy`}</p>
+              <Button className="h-12 w-full bg-gold-gradient text-gold-foreground shadow-gold" disabled={act.isPending || p.cash < trip.price} onClick={() => void beginTravel()}>
                 <Navigation className="size-4" />Travel here · {trip.price ? formatNaira(trip.price) : "Free"} · {trip.minutes} min
               </Button>
             </div>

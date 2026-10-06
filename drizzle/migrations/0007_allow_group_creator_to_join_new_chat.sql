@@ -1,0 +1,2 @@
+DROP POLICY "group chats visible to members" ON public.group_chats;
+CREATE POLICY "group chats visible to members and creator" ON public.group_chats FOR SELECT TO authenticated USING (created_by = auth.uid() OR public.is_group_chat_member(id, auth.uid()));
