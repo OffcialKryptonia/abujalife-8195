@@ -40,7 +40,6 @@ export type GameAction =
   | { type: "cashOut" }
   | { type: "playGame"; gameId: string }
   | { type: "robbery" }
-  | { type: "transferGameMoney"; amount: number; currency: "NGN" | "USD" };
 
 export interface ActionResult {
   next: PlayerState;
@@ -346,21 +345,6 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       if (!s.invest_amount) throw new GameRuleError("No active investment.");
       const v = investValue(s);
       return { next: { ...s, bank: s.bank + v, invest_amount: 0, invest_start: 0 }, message: `Cashed out ${formatNaira(v)}.`, tx: [{ amount: v, label: "Treasury notes payout", kind: "invest" }] };
-    }
-    case "transferGameMoney": {
-      const amount = Math.floor(action.amount);
-      if (amount <= 0) throw new GameRuleError("Enter a valid Game Money amount.");
-      if (amount > s.game_money) throw new GameRuleError("Not enough Game Money.");
-      if (action.currency === "NGN") {
-        const naira = Math.floor(amount / 10);
-        if (naira < 1) throw new GameRuleError("Minimum transfer is 10 Game Money.");
-        const used = naira * 10;
-        return { next: { ...s, game_money: s.game_money - used, bank: s.bank + naira }, message: `Transferred ${used.toLocaleString()} Game Money to your Naira bank wallet.`, tx: [{ amount: -used, label: "Game Money transfer", kind: "game_money_transfer", currency: "GAME_MONEY" }, { amount: naira, label: "Game Money → Naira", kind: "wallet_transfer", currency: "NGN" }] };
-      }
-      const usd = Math.floor(amount / (10 * NGN_PER_USD));
-      if (usd < 1) throw new GameRuleError(`Minimum USD transfer is ${(10 * NGN_PER_USD).toLocaleString()} Game Money.`);
-      const used = usd * 10 * NGN_PER_USD;
-      return { next: { ...s, game_money: s.game_money - used, usd_bank: s.usd_bank + usd }, message: `Transferred ${used.toLocaleString()} Game Money to your USD bank wallet as ${formatDollar(usd)}.`, tx: [{ amount: -used, label: "Game Money transfer", kind: "game_money_transfer", currency: "GAME_MONEY" }, { amount: usd, label: "Game Money → USD", kind: "wallet_transfer", currency: "USD" }] };
     }
     case "robbery": {
       const risk = Math.max(0.10, Math.min(0.45, 0.18 + (levelFromXp(s.xp) * 0.01)));
