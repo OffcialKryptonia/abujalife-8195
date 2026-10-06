@@ -62,7 +62,8 @@ function HomeScreen() {
   const [pose, setPose] = useState<Pose | null>(null);
   const [activeUid, setActiveUid] = useState<string | null>(null);
   const [fx, setFx] = useState<{ k: number; at: Pt; z: number; items: StatChip[] } | null>(null);
-  const [lookOpen, setLookOpen] = useState(false);\n  const [incident, setIncident] = useState(false);
+  const [lookOpen, setLookOpen] = useState(false);
+  const [incident, setIncident] = useState(false);
   const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const busy = useRef(false);
 
@@ -145,7 +146,10 @@ function HomeScreen() {
   // Contextual floating cards, aware of the time of day.
   const challenge = challengeForDay(t.day);
   const claimed = p.last_challenge_day >= t.day;
-  const nearby = PLACES.find((pl) => pl.district === p.district && pl.cat === "Events" && isOpen(pl.hours, t.hour));\n  const robberyRiskDistricts = ["kubwa", "utako", "wuse", "garki", "lugbe", "apo", "lokogoma", "galadimawa"] as const;\n  const incidentSeed = (t.day * 17 + Math.floor(p.game_minutes / 180) * 7 + p.district.length) % 23;\n  const robberyWindow = robberyRiskDistricts.includes(p.district as typeof robberyRiskDistricts[number]) && incidentSeed === 3 && p.cash >= 500;
+  const nearby = PLACES.find((pl) => pl.district === p.district && pl.cat === "Events" && isOpen(pl.hours, t.hour));
+  const robberyRiskDistricts = ["kubwa", "utako", "wuse", "garki", "lugbe", "apo", "lokogoma", "galadimawa"] as const;
+  const incidentSeed = (t.day * 17 + Math.floor(p.game_minutes / 180) * 7 + p.district.length) % 23;
+  const robberyWindow = robberyRiskDistricts.includes(p.district as typeof robberyRiskDistricts[number]) && incidentSeed === 3 && p.cash >= 500;
   const findUse = (pred: (it: FurnitureItem) => boolean) => p.furniture.find((r) => r.p && itemById(r.i)?.use && pred(itemById(r.i)!));
   const kitchen = findUse((i) => i.cat === "Kitchen");
   const bath = findUse((i) => i.cat === "Bathroom" && i.shape !== "seat");
@@ -157,7 +161,8 @@ function HomeScreen() {
   if (!claimed) cards.push({ icon: Trophy, title: "Daily challenge", sub: `${challenge.desc} · ${formatNaira(challenge.cash)}`, tone: "bg-gold", onClick: () => act.mutate({ type: "claimChallenge" }, { onSuccess: (r) => { if (r.ok) { setPose("cheer"); setTimeout(() => setPose(null), 1500); } } }) });
   if (!job) cards.push({ icon: Briefcase, title: "Find a job", sub: "Open Jobs on your phone", tone: "bg-primary", to: "/play/phone", search: { app: "jobs" } });
   else if (job.district !== p.district) cards.push({ icon: Briefcase, title: "Go to work", sub: `${job.employer}, ${districtById(job.district).name}`, tone: "bg-primary", to: "/play/map", search: { district: job.district } });
-  if (nearby) cards.push({ icon: Sparkles, title: "Happening nearby", sub: nearby.name, tone: "bg-social", to: "/play/map", search: { place: nearby.id } });\n  if (robberyWindow && !incident) cards.push({ icon: Shield, title: "Street incident", sub: "You feel someone following you", tone: "bg-destructive", onClick: () => setIncident(true) });
+  if (nearby) cards.push({ icon: Sparkles, title: "Happening nearby", sub: nearby.name, tone: "bg-social", to: "/play/map", search: { place: nearby.id } });
+  if (robberyWindow && !incident) cards.push({ icon: Shield, title: "Street incident", sub: "You feel someone following you", tone: "bg-destructive", onClick: () => setIncident(true) });
 
   const avatarPose = pose ?? idlePose;
   const ticker = [
@@ -243,7 +248,12 @@ function HomeScreen() {
         )}
       </div>
 
-      {incident && robberyWindow && (\n        <div className="glass rounded-2xl border border-destructive/30 p-3 text-surface-foreground animate-rise">\n          <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-destructive text-destructive-foreground"><Shield className="size-5" /></span><div className="min-w-0 flex-1"><p className="font-semibold">Robbery situation</p><p className="text-xs text-surface-foreground/70">Someone has confronted you on the street. Try to get away or accept the loss.</p><div className="mt-2 flex gap-2"><Button size="sm" variant="destructive" disabled={act.isPending} onClick={() => { setIncident(false); act.mutate({ type: "robbery" }); }}>Get away</Button><Button size="sm" variant="outline" onClick={() => setIncident(false)}>Ignore</Button></div></div></div>\n        </div>\n      )}\n      {!edit && <CityTicker items={ticker} />}
+      {incident && robberyWindow && (
+        <div className="glass rounded-2xl border border-destructive/30 p-3 text-surface-foreground animate-rise">
+          <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-destructive text-destructive-foreground"><Shield className="size-5" /></span><div className="min-w-0 flex-1"><p className="font-semibold">Robbery situation</p><p className="text-xs text-surface-foreground/70">Someone has confronted you on the street. Try to get away or accept the loss.</p><div className="mt-2 flex gap-2"><Button size="sm" variant="destructive" disabled={act.isPending} onClick={() => { setIncident(false); act.mutate({ type: "robbery" }); }}>Get away</Button><Button size="sm" variant="outline" onClick={() => setIncident(false)}>Ignore</Button></div></div></div>
+        </div>
+      )}
+      {!edit && <CityTicker items={ticker} />}
       {!edit && <AbujaLifeHub look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} cash={p.cash} reputation={p.reputation} />}
       {!edit && <CoachCard cash={p.cash} />}
 
