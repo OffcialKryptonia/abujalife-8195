@@ -48,7 +48,7 @@ export const performAction = createServerFn({ method: "POST" })
     const n = result.next;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("players").update({
-      district: n.district, cash: n.cash, bank: n.bank, usd_cash: n.usd_cash, usd_bank: n.usd_bank, hunger: n.hunger, energy: n.energy,
+      district: n.district, cash: n.cash, bank: n.bank, usd_cash: n.usd_cash, usd_bank: n.usd_bank, game_money: n.game_money, hunger: n.hunger, energy: n.energy,
       happiness: n.happiness, xp: n.xp, reputation: n.reputation, job_id: n.job_id,
       career_xp: n.career_xp, shifts: n.shifts, home_id: n.home_id, game_minutes: n.game_minutes,
       hygiene: n.hygiene, social: n.social, outfit: n.outfit, furniture: n.furniture as never, vehicles: n.vehicles as never,
