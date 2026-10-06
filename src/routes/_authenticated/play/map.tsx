@@ -85,15 +85,16 @@ function MapScreen() {
     if (!focusD || !trip) return;
     const startDistrict = districtById(p.district);
     const destination = focusD;
+    const arrivalVenue = focus ? WUSE2_VENUES.find((venue) => venue.activityId === focus.id)?.id : undefined;
     const result = await act.mutateAsync({ type: "travel", to: destination.id as DistrictId, vehicle, mode });
     if (result.ok) {
-      setTravelScene({ from: startDistrict.name, destination: destination.id, hour: t.hour, weather: weatherFor(p.game_minutes), modeName: vehicle ? vehicleById(vehicle)?.name ?? "Personal vehicle" : MODE_INFO[mode].name });
+      setTravelScene({ from: startDistrict.name, destination: destination.id, venue: arrivalVenue, hour: t.hour, weather: weatherFor(p.game_minutes), modeName: vehicle ? vehicleById(vehicle)?.name ?? "Personal vehicle" : MODE_INFO[mode].name });
     }
   };
 
   if (travelScene) {
     const dest = destinationFor(travelScene.destination);
-    return <TravelSequence from={travelScene.from} dest={dest} hour={travelScene.hour} weather={travelScene.weather} modeName={travelScene.modeName} look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} onDone={() => { setTravelScene(null); void navigate({ to: "/play/place/$districtId", params: { districtId: travelScene.destination } }); }} />;
+    return <TravelSequence from={travelScene.from} dest={dest} hour={travelScene.hour} weather={travelScene.weather} modeName={travelScene.modeName} look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} onDone={() => { setTravelScene(null); void navigate({ to: "/play/place/$districtId", params: { districtId: travelScene.destination }, search: travelScene.venue ? { venue: travelScene.venue } : {} }); }} />;
   }
 
   return (
