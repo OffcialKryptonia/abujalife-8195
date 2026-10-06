@@ -8,7 +8,7 @@ export interface FurnitureRow { u: string; i: string; x: number; y: number; r: n
 
 export interface PlayerState {
   name: string; district: string; outfit: string;
-  cash: number; bank: number; usd_cash: number; usd_bank: number;
+  cash: number; bank: number; usd_cash: number; usd_bank: number; game_money: number;
   hunger: number; energy: number; happiness: number; hygiene: number; social: number;
   xp: number; reputation: number; job_id: string | null; career_xp: number; shifts: number;
   home_id: string; game_minutes: number;
