@@ -256,7 +256,7 @@ export function ProfileView({ id, onMessage }: { id: string; onMessage: (id: str
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Button variant={following ? "secondary" : "default"} onClick={() => (following ? social.unfollow(id) : social.follow(id))}>{following ? <><UserCheck className="size-4" />Following</> : <><UserPlus className="size-4" />Follow</>}</Button>
           <Button variant="secondary" onClick={() => onMessage(id)}><MessageCircle className="size-4" />Message</Button>
-          <Link to="/play/visit/$userId" params={{ userId: id }} className="col-span-2 flex items-center justify-center gap-2 rounded-md border py-2 text-sm font-semibold"><Home className="size-4" />Visit their home</Link>
+          <Link to="/play/visit/$userId" params={{ userId: id }} className="col-span-2 flex items-center justify-center gap-2 rounded-md border py-2 text-sm font-semibold"><Home className="size-4" />Invite / Visit Home</Link>
           {blocks?.has(id) ? <Button variant="outline" onClick={() => social.unblock(id)}>Unblock</Button> : <Button variant="outline" onClick={() => social.block(id)}><Ban className="size-4" />Block</Button>}
           <Button variant="outline" onClick={() => social.report(id, null, "Player behaviour")}><Flag className="size-4" />Report</Button>
         </div>
