@@ -191,17 +191,17 @@ export function PeopleApp({ openProfile }: { openProfile: (id: string) => void }
   const { data } = useProfiles();
   const { data: blocks } = useBlocks();
   const [q, setQ] = useState("");
-  const [requests, setRequests] = useState<{ requester_id: string; recipient_id: string; status: string }[]>([]);
+  const [requests, setRequests] = useState<{ id: string; requester_id: string; recipient_id: string; status: string }[]>([]);
   const [requestsReady, setRequestsReady] = useState(false);
   useMemo(() => {
     let active = true;
-    void supabase.from("friend_requests").select("requester_id, recipient_id, status")
+    void supabase.from("friend_requests").select("id, requester_id, recipient_id, status")
       .or(`requester_id.eq.${me.user_id},recipient_id.eq.${me.user_id}`)
       .then(({ data: rows }) => { if (active) { setRequests(rows ?? []); setRequestsReady(true); } });
     return () => { active = false; };
   }, [me.user_id]);
   const refreshRequests = async () => {
-    const { data: rows } = await supabase.from("friend_requests").select("requester_id, recipient_id, status")
+    const { data: rows } = await supabase.from("friend_requests").select("id, requester_id, recipient_id, status")
       .or(`requester_id.eq.${me.user_id},recipient_id.eq.${me.user_id}`);
     setRequests(rows ?? []);
     await qc.invalidateQueries({ queryKey: ["profiles"] });
@@ -278,8 +278,34 @@ export function MessagesApp({ initialPeer }: { initialPeer?: string | null }) {
   const [makingGroup, setMakingGroup] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupMembers, setGroupMembers] = useState<string[]>([]);
-  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
-  const [groupMessages, setGroupMessages] = useState<{ id: string; chat_id: string; sender_id: string; body: string; created_at: string }[]>([]);
+  const { data: friendIds = [] } = useQuery({
+    queryKey: ["accepted-friends", me.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("friend_requests").select("requester_id, recipient_id").eq("status", "accepted").or(`requester_id.eq.${me.user_id},recipient_id.eq.${me.user_id}`);
+      if (error) throw error;
+      return data.map((row) => row.requester_id === me.user_id ? row.recipient_id : row.requester_id);
+    },
+  });
+  const { data: groups = [] } = useQuery({
+    queryKey: ["group-chats", me.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("group_chats").select("id, name").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 12000,
+  });
+  const { data: groupMessages = [] } = useQuery({
+    queryKey: ["group-chat-messages", groupId],
+    enabled: Boolean(groupId),
+    queryFn: async () => {
+      if (!groupId) return [];
+      const { data, error } = await supabase.from("group_chat_messages").select("id, chat_id, sender_id, body, created_at").eq("chat_id", groupId).order("created_at", { ascending: true }).limit(500);
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: groupId ? 6000 : false,
+  });
   const { data: msgs } = useQuery({
     queryKey: ["messages"],
     refetchInterval: peer ? 6000 : 20000,
@@ -289,18 +315,6 @@ export function MessagesApp({ initialPeer }: { initialPeer?: string | null }) {
       return data;
     },
   });
-  useMemo(() => {
-    let active = true;
-    const loadGroups = async () => {
-      const [g, m] = await Promise.all([
-        supabase.from("group_chats").select("id, name").order("created_at", { ascending: false }),
-        supabase.from("group_chat_messages").select("id, chat_id, sender_id, body, created_at").order("created_at", { ascending: true }).limit(500),
-      ]);
-      if (active) { setGroups(g.data ?? []); setGroupMessages(m.data ?? []); }
-    };
-    void loadGroups();
-    return () => { active = false; };
-  }, [msgs, me.user_id]);
   const convos = useMemo(() => {
     const m = new Map<string, { last: string; at: string }>();
     (msgs ?? []).forEach((x) => { const o = x.sender_id === me.user_id ? x.recipient_id : x.sender_id; m.set(o, { last: x.body, at: x.created_at }); });
@@ -321,18 +335,18 @@ export function MessagesApp({ initialPeer }: { initialPeer?: string | null }) {
   const sendGroupMessage = async () => {
     if (!groupId || !text.trim()) return;
     const { error } = await supabase.from("group_chat_messages").insert({ chat_id: groupId, sender_id: me.user_id, body: text.trim().slice(0, 500) });
-    if (error) toast.error("Message not delivered."); else { setText(""); const { data: rows } = await supabase.from("group_chat_messages").select("id, chat_id, sender_id, body, created_at").order("created_at", { ascending: true }).limit(500); setGroupMessages(rows ?? []); }
+    if (error) toast.error("Message not delivered."); else { setText(""); await qc.invalidateQueries({ queryKey: ["group-chat-messages", groupId] }); }
   };
   const createGroup = async () => {
     const label = groupName.trim();
     if (!label || groupMembers.length < 1) { toast.error("Choose a name and at least one friend."); return; }
-    const id = crypto.randomUUID();
-    const { error: groupError } = await supabase.from("group_chats").insert({ id, name: label.slice(0, 60), created_by: me.user_id });
+    const { data: created, error: groupError } = await supabase.from("group_chats").insert({ name: label.slice(0, 60), created_by: me.user_id }).select("id").single();
     if (groupError) { toast.error("Couldn't create the group."); return; }
+    const id = created.id;
     const { error: memberError } = await supabase.from("group_chat_members").insert([me.user_id, ...groupMembers].map((user_id) => ({ chat_id: id, user_id })));
     if (memberError) { toast.error("Group created but membership did not save. Please retry from a new group."); return; }
     setGroupName(""); setGroupMembers([]); setMakingGroup(false); setGroupId(id);
-    const { data: rows } = await supabase.from("group_chats").select("id, name").order("created_at", { ascending: false }); setGroups(rows ?? []);
+    await qc.invalidateQueries({ queryKey: ["group-chats", me.user_id] });
     toast.success("Group chat created");
   };
 
@@ -360,7 +374,7 @@ export function MessagesApp({ initialPeer }: { initialPeer?: string | null }) {
   return (
     <div>
       <div className="flex items-center justify-between border-b px-4 py-2"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Conversations</p><Button size="sm" variant="outline" onClick={() => setMakingGroup((v) => !v)}><UsersRound className="size-4" />New group</Button></div>
-      {makingGroup && <div className="space-y-2 border-b p-3"><Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Group name" maxLength={60} /><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select friends</p><div className="max-h-32 space-y-1 overflow-y-auto">{[...new Set((follows?.following ?? []))].filter((id) => !blocks?.has(id)).map((id) => <label key={id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={groupMembers.includes(id)} onChange={(e) => setGroupMembers((old) => e.target.checked ? [...old, id] : old.filter((x) => x !== id))} />{profiles.get(id)?.name ?? "Abujan"}</label>)}</div><Button size="sm" disabled={!groupName.trim() || groupMembers.length === 0} onClick={() => void createGroup()}>Create group</Button></div>}
+      {makingGroup && <div className="space-y-2 border-b p-3"><Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Group name" maxLength={60} /><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select friends</p><div className="max-h-32 space-y-1 overflow-y-auto">{friendIds.filter((id) => !blocks?.has(id)).map((id) => <label key={id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={groupMembers.includes(id)} onChange={(e) => setGroupMembers((old) => e.target.checked ? [...old, id] : old.filter((x) => x !== id))} />{profiles.get(id)?.name ?? "Abujan"}</label>)}</div><Button size="sm" disabled={!groupName.trim() || groupMembers.length === 0} onClick={() => void createGroup()}>Create group</Button></div>}
       {groups.map((g) => <button key={g.id} onClick={() => setGroupId(g.id)} className="flex w-full items-center gap-3 border-b px-4 py-2.5 text-left"><span className="grid size-10 place-items-center rounded-full bg-gold/15 text-gold"><UsersRound className="size-5" /></span><span className="min-w-0 flex-1 truncate text-sm font-semibold">{g.name}</span><span className="text-[10px] text-muted-foreground">Group</span></button>)}
       {convos.length === 0 && suggestions.length === 0 && groups.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">No chats yet. Find people in the Abuja neighbourhoods.</p>}
       {convos.map(([id, c]) => (
