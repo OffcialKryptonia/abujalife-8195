@@ -189,6 +189,7 @@ export type Database = {
           cash: number
           usd_cash: number
           usd_bank: number
+          game_money: number
           created_at: string
           district: string
           energy: number
@@ -227,6 +228,7 @@ export type Database = {
           cash?: number
           usd_cash?: number
           usd_bank?: number
+          game_money?: number
           created_at?: string
           district?: string
           energy?: number
@@ -265,6 +267,7 @@ export type Database = {
           cash?: number
           usd_cash?: number
           usd_bank?: number
+          game_money?: number
           created_at?: string
           district?: string
           energy?: number
