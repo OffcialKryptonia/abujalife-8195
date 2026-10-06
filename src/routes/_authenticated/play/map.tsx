@@ -89,7 +89,7 @@ function MapScreen() {
     const arrivalVenue = focus ? WUSE2_VENUES.find((venue) => venue.activityId === focus.id)?.id : undefined;
     const result = await act.mutateAsync({ type: "travel", to: destination.id as DistrictId, vehicle, mode });
     if (result.ok) {
-      setTravelScene({ from: startDistrict.name, destination: destination.id, venue: arrivalVenue, hour: t.hour, weather: weatherFor(p.game_minutes), modeName: vehicle ? vehicleById(vehicle)?.name ?? "Personal vehicle" : MODE_INFO[mode].name });
+      setTravelScene({ from: startDistrict.name, destination: destination.id, ...(arrivalVenue ? { venue: arrivalVenue } : {}), hour: t.hour, weather: weatherFor(p.game_minutes), modeName: vehicle ? vehicleById(vehicle)?.name ?? "Personal vehicle" : MODE_INFO[mode].name });
     }
   };
 
