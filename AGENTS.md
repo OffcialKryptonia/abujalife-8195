@@ -20,3 +20,4 @@
 - Real-world map uses Leaflet + OpenStreetMap tiles, lazy-loaded client-side only in `RealAbujaMap` — keeps SSR safe and the game bundle small.
 - Destination experiences use typed venue data in `src/game/venues.ts` and reusable SVG/CSS scenes in `src/components/game/world/VenueScene.tsx` — venue presentation stays extensible without duplicating game rules or save logic.
 - Social interactions use additive Lovable Cloud tables with participant-scoped RLS, while established direct chat and player-action APIs remain intact — social expansion cannot bypass ownership or game authority.
+- Multi-row social creation is performed by a single authenticated database function — related records must commit together to avoid orphaned game-world state.
