@@ -63,12 +63,12 @@ export const verifyKorapayGameMoney = createServerFn({ method: "POST" })
     const payload = await response.json() as any;
     const paid = payload?.status === true && payload?.data?.status === "success";
     if (!paid) return { ok: false, status: payload?.data?.status ?? "pending" };
-    const { data: player } = await db.from("players").select("cash").eq("user_id", context.userId).single();
+    const { data: player } = await db.from("players").select("game_money").eq("user_id", context.userId).single();
     if (!player) throw new Error("Player not found.");
     const { data: claimed } = await db.from("payment_orders").update({ status: "paid", provider_payload: payload, paid_at: new Date().toISOString() }).eq("id", order.id).eq("status", "pending").select("id").maybeSingle();
     if (!claimed) return { ok: true, credited: false, gameMoney: order.game_money };
-    await db.from("players").update({ cash: player.cash + order.game_money, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
-    await db.from("transactions").insert({ user_id: context.userId, amount: order.game_money, label: `Game Money purchase — ${order.product_id}`, kind: "game_money" });
+    await db.from("players").update({ game_money: player.game_money + order.game_money, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
+    await db.from("transactions").insert({ user_id: context.userId, amount: order.game_money, label: `Game Money purchase — ${order.product_id}`, kind: "game_money", currency: "GAME_MONEY" });
     return { ok: true, credited: true, gameMoney: order.game_money };
   });
 
