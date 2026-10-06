@@ -187,7 +187,10 @@ export const PLACES: Place[] = [
   // Transport
   { id: "utako_park", name: "Utako Motor Park", cat: "Transport", district: "utako", x: 345, y: 385, desc: "Interstate buses and loud agberos." },
   { id: "kubwa_rail", name: "Kubwa Rail Station", cat: "Transport", district: "kubwa", x: 55, y: 90, desc: "Metro line into the city." },
-  { id: "lugbe_airport_rd", name: "Airport Road Junction", cat: "Transport", district: "lugbe", x: 160, y: 660, desc: "Straight shot to the airport." },\n  { id: "helipad_asokoro", name: "Asokoro Executive Helipad", cat: "Transport", district: "asokoro", x: 805, y: 455, desc: "Private helicopter arrivals and executive transfers.", hours: [6, 22] },\n  { id: "helipad_maitama", name: "Maitama VIP Helipad", cat: "Transport", district: "maitama", x: 600, y: 165, desc: "Discreet VIP rotorcraft terminal.", hours: [6, 23] },\n  { id: "helipad_jabi", name: "Jabi Lakeside Helipad", cat: "Transport", district: "jabi", x: 285, y: 455, desc: "Premium lakeside charter pickup point.", hours: [7, 21] },
+  { id: "lugbe_airport_rd", name: "Airport Road Junction", cat: "Transport", district: "lugbe", x: 160, y: 660, desc: "Straight shot to the airport." },
+  { id: "helipad_asokoro", name: "Asokoro Executive Helipad", cat: "Transport", district: "asokoro", x: 805, y: 455, desc: "Private helicopter arrivals and executive transfers.", hours: [6, 22] },
+  { id: "helipad_maitama", name: "Maitama VIP Helipad", cat: "Transport", district: "maitama", x: 600, y: 165, desc: "Discreet VIP rotorcraft terminal.", hours: [6, 23] },
+  { id: "helipad_jabi", name: "Jabi Lakeside Helipad", cat: "Transport", district: "jabi", x: 285, y: 455, desc: "Premium lakeside charter pickup point.", hours: [7, 21] },
   // Events (time-dependent)
   { id: "evt_jam", name: "Friday Night Jam", cat: "Events", district: "wuse2", x: 575, y: 290, desc: "Afrobeats, shisha and a live DJ.", hours: [20, 3], activity: { label: "Party", cost: 15000, happy: 28, social: 20, rep: 6, energy: -20, minutes: 180 } },
   { id: "evt_park", name: "Millennium Park Picnic", cat: "Events", district: "maitama", x: 615, y: 225, desc: "Families, frisbees and sunset photos.", hours: [8, 18], activity: { label: "Join the picnic", cost: 2000, happy: 18, social: 15, rep: 2, minutes: 150 } },
