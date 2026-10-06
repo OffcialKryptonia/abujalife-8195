@@ -345,7 +345,7 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       const v = investValue(s);
       return { next: { ...s, bank: s.bank + v, invest_amount: 0, invest_start: 0 }, message: `Cashed out ${formatNaira(v)}.`, tx: [{ amount: v, label: "Treasury notes payout", kind: "invest" }] };
     }
-    case "robbery": {\n      const risk = Math.max(0.1, Math.min(0.45, 0.18 + (levelFromXp(s.xp) * 0.01)));\n      const stolen = Math.min(s.cash, Math.max(500, Math.round(s.cash * risk / 100) * 100));\n      if (stolen <= 0) throw new GameRuleError("You had no cash on you to lose.");\n      const n = advance(s, 12);\n      return { next: { ...n, cash: s.cash - stolen, happiness: clamp(s.happiness - 10), energy: clamp(s.energy - 6) }, message: `You were robbed on the street. −${formatNaira(stolen)} cash.`, tx: [{ amount: -stolen, label: "Street robbery", kind: "incident" }] };\n    }\n    case "playGame": {
+    case "robbery": {\n      const risk = Math.max(0.10, Math.min(0.45, 0.18 + (levelFromXp(s.xp) * 0.01)));\n      const stolen = Math.min(s.cash, Math.max(500, Math.round(s.cash * risk)));\n      if (stolen <= 0) throw new GameRuleError("You had no cash on you to lose.");\n      const n = advance(s, 12);\n      return { next: { ...n, cash: s.cash - stolen, happiness: clamp(s.happiness - 10), energy: clamp(s.energy - 6) }, message: `You were robbed on the street. −${formatNaira(stolen)} cash.`, tx: [{ amount: -stolen, label: "Street robbery", kind: "incident" }] };\n    }\n    case "playGame": {
       const g = PHONE_GAMES.find((x) => x.id === a.gameId);
       if (!g) throw new GameRuleError("Game not found.");
       if (s.energy < 5) throw new GameRuleError("Too tired, even for games.");
