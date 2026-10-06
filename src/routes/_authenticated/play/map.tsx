@@ -14,9 +14,10 @@ import { PlayerCharacter } from "@/components/game/PlayerCharacter";
 import { haptic } from "@/components/game/motion";
 import { TravelSequence } from "@/components/game/world/TravelSequence";
 import { destinationFor, weatherFor } from "@/game/destinations";
+import { WUSE2_VENUES } from "@/game/venues";
 
 export const Route = createFileRoute("/_authenticated/play/map")({
-  validateSearch: z.object({ place: z.string().optional(), district: z.string().optional() }),
+  validateSearch: z.object({ place: z.string().optional(), district: z.string().optional(), venue: z.string().optional() }),
   head: () => ({ meta: [{ title: "Abuja Map — AbujaLife" }, { name: "description", content: "Explore a living Abuja: districts, food, jobs, events and landmarks." }, { property: "og:title", content: "Abuja Map — AbujaLife" }, { property: "og:description", content: "Explore a living virtual Abuja." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: MapScreen,
 });
@@ -44,7 +45,7 @@ function MapScreen() {
   const [selDistrict, setSelDistrict] = useState<string | null>(search.district ?? (search.place ? null : null));
   const [vehicle, setVehicle] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<TransportMode>("taxi");
-  const [travelScene, setTravelScene] = useState<{ from: string; destination: string; hour: number; weather: ReturnType<typeof weatherFor>; modeName: string } | null>(null);
+  const [travelScene, setTravelScene] = useState<{ from: string; destination: string; venue?: string; hour: number; weather: ReturnType<typeof weatherFor>; modeName: string } | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [real, setReal] = useState(false);
 
