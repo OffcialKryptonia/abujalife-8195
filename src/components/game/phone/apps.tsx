@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import { useGameAction, useMe, useTransactions } from "@/hooks/use-player";
+import { useGameAction, useMe, useProfiles, useTransactions } from "@/hooks/use-player";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/game/ui";
 import { useBlocks, useSocialActions } from "./social";
@@ -249,35 +249,118 @@ export function ProfileApp() {
 }
 
 export function GameMoneyApp() {
+  const me = useMe();
+  const profilesQuery = useProfiles();
   const [provider, setProvider] = useState<"korapay" | "pocketfi">("korapay");
   const [busy, setBusy] = useState(false);
   const [phone, setPhone] = useState("");
+  const [recipientId, setRecipientId] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
+
   const packs = [
     { id: "gm_1000", name: "Starter", price: 1000, money: 10000 },
     { id: "gm_5000", name: "Hustler", price: 5000, money: 55000 },
     { id: "gm_10000", name: "Executive", price: 10000, money: 120000 },
     { id: "gm_25000", name: "Tycoon", price: 25000, money: 325000 },
   ];
+
+  const players = (profilesQuery.data ?? []).filter((profile) => profile.user_id !== me.user_id);
+  const selectedPlayer = players.find((profile) => profile.user_id === recipientId);
+  const amount = Math.floor(Number(transferAmount) || 0);
+
   const buy = async (productId: string) => {
     setBusy(true);
     try {
       const { createGameMoneyCheckout } = await import("@/lib/payment.functions");
-      const result = await createGameMoneyCheckout({ data: { productId, provider, phone: phone || undefined } });
-      if (!result.checkoutUrl) throw new Error(result.configured ? "Payment checkout was not returned." : `${provider === "korapay" ? "Korapay" : "PocketFi"} is not configured yet.`);
+      const result = await createGameMoneyCheckout({
+        data: { productId, provider, phone: phone || undefined },
+      });
+      if (!result.checkoutUrl) {
+        throw new Error(result.configured
+          ? "Payment checkout was not returned."
+          : `${provider === "korapay" ? "Korapay" : "PocketFi"} is not configured yet.`);
+      }
       window.location.href = result.checkoutUrl;
-    } catch (e) { window.alert((e as Error).message); } finally { setBusy(false); }
+    } catch (e) {
+      window.alert((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
   };
+
+  const sendGameMoney = async () => {
+    if (!selectedPlayer) return window.alert("Choose another player first.");
+    if (amount <= 0) return window.alert("Enter a valid Game Money amount.");
+    if (amount > me.game_money) return window.alert("Not enough Game Money.");
+
+    setBusy(true);
+    try {
+      const { transferGameMoneyToPlayer } = await import("@/lib/game-money.functions");
+      await transferGameMoneyToPlayer({ data: { recipientId, amount } });
+      setTransferAmount("");
+      setRecipientId("");
+      await profilesQuery.refetch();
+      window.alert(`${amount.toLocaleString()} Game Money sent to ${selectedPlayer.name}.`);
+    } catch (e) {
+      window.alert((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return <div>
-    <Hero className="bg-gradient-to-br from-primary to-surface"><p className="text-xs opacity-70">AbujaLife · Naira Wallet</p><p className="font-display text-2xl font-black">Top up your Naira</p><p className="mt-1 text-xs opacity-70">Real-money payments are verified server-side before value is credited.</p></Hero>
-    <div className="flex gap-2 px-3 pb-3"><button onClick={()=>setProvider("korapay")} className={cn("flex-1 rounded-xl border px-3 py-2 text-xs font-black",provider==="korapay"&&"border-primary bg-primary/10")}>Korapay</button><button onClick={()=>setProvider("pocketfi")} className={cn("flex-1 rounded-xl border px-3 py-2 text-xs font-black",provider==="pocketfi"&&"border-primary bg-primary/10")}>PocketFi</button></div>
-    {provider === "pocketfi" && <div className="px-3 pb-3"><Input inputMode="tel" placeholder="Phone number for PocketFi" value={phone} onChange={e=>setPhone(e.target.value)} /></div>}
+    <Hero className="bg-gradient-to-br from-primary to-surface">
+      <p className="text-xs opacity-70">AbujaLife · Game Wallet</p>
+      <p className="font-display text-2xl font-black">{me.game_money.toLocaleString()} GM</p>
+      <p className="mt-1 text-xs opacity-70">Game Money is the universal in-game currency used across AbujaLife. Buy it with real money, then spend it in the game.</p>
+    </Hero>
+
     <div className="mx-3 mb-3 rounded-2xl border border-primary/20 bg-primary/5 p-3">
-      <div className="mb-2 flex items-center justify-between"><div><p className="text-xs font-bold">Transfer Game Money to your wallet</p><p className="text-[10px] text-muted-foreground">Convert Game Money into your own bank balance.</p></div><span className="text-xs font-black">{p.game_money.toLocaleString()} GM</span></div>
-      <div className="mb-2 grid grid-cols-2 gap-2"><button onClick={()=>setTransferCurrency("NGN")} className={cn("rounded-xl border px-3 py-2 text-xs font-black",transferCurrency==="NGN"&&"border-primary bg-primary/10")}>₦ NGN</button><button onClick={()=>setTransferCurrency("USD")} className={cn("rounded-xl border px-3 py-2 text-xs font-black",transferCurrency==="USD"&&"border-primary bg-primary/10")}>$ USD</button></div>
-      <div className="flex gap-2"><Input type="number" min="1" value={transferAmount} onChange={e=>setTransferAmount(e.target.value)} placeholder={transferCurrency==="NGN"?"Naira amount":"USD amount"} /><Button disabled={act.isPending || transferValue <= 0 || transferCost > p.game_money} onClick={()=>{ act.mutate({type:"transferGameMoney",amount:transferCost,currency:transferCurrency}); setTransferAmount(""); }}>Transfer</Button></div>
-      <p className="mt-1 text-[10px] text-muted-foreground">{transferCost.toLocaleString()} GM required · 10 GM = ₦1 · ₦{NGN_PER_USD.toLocaleString()} = $1</p>
+      <p className="text-sm font-bold">Send Game Money to another player</p>
+      <p className="mt-1 text-[10px] text-muted-foreground">Transfers are player-to-player only. You cannot transfer to yourself.</p>
+
+      <select
+        value={recipientId}
+        onChange={(e) => setRecipientId(e.target.value)}
+        className="mt-3 h-10 w-full rounded-xl border bg-background px-3 text-sm"
+      >
+        <option value="">Choose a player</option>
+        {players.map((player) => (
+          <option key={player.user_id} value={player.user_id}>{player.name}</option>
+        ))}
+      </select>
+
+      <div className="mt-2 flex gap-2">
+        <Input
+          type="number"
+          min="1"
+          max={me.game_money}
+          value={transferAmount}
+          onChange={(e) => setTransferAmount(e.target.value)}
+          placeholder="Game Money amount"
+        />
+        <Button disabled={busy || !recipientId || amount <= 0 || amount > me.game_money} onClick={sendGameMoney}>Send</Button>
+      </div>
+      <p className="mt-1 text-[10px] text-muted-foreground">Available: {me.game_money.toLocaleString()} GM</p>
     </div>
-    {packs.map((pack)=> key={pack.id} title={<span>{pack.name} Pack</span>} sub={`${formatNaira(pack.price)} → ${formatNaira(pack.money)} in-game Naira`} right={<Button size="sm" disabled={busy} onClick={()=>buy(pack.id)}>Buy</Button>}/>)}
-    <p className="px-4 py-3 text-[10px] leading-4 text-muted-foreground">AbujaLife uses two spendable currencies: Nigerian Naira (₦) and US Dollars ($). Real-money top-ups credit the Naira wallet; players can exchange between wallets at the in-game FX rate.</p>
+
+    <div className="mx-3 mb-3 rounded-2xl border bg-muted/30 p-3">
+      <p className="text-sm font-bold">Buy Game Money</p>
+      <p className="mt-1 text-[10px] text-muted-foreground">Real money is used only to purchase Game Money. Korapay and PocketFi payments are verified before Game Money is credited.</p>
+      <div className="mt-3 flex gap-2">
+        <button onClick={()=>setProvider("korapay")} className={cn("flex-1 rounded-xl border px-3 py-2 text-xs font-black",provider==="korapay"&&"border-primary bg-primary/10")}>Korapay</button>
+        <button onClick={()=>setProvider("pocketfi")} className={cn("flex-1 rounded-xl border px-3 py-2 text-xs font-black",provider==="pocketfi"&&"border-primary bg-primary/10")}>PocketFi</button>
+      </div>
+      {provider === "pocketfi" && <div className="pt-3"><Input inputMode="tel" placeholder="Phone number for PocketFi" value={phone} onChange={e=>setPhone(e.target.value)} /></div>}
+    </div>
+
+    {packs.map((pack) => (
+      <Row
+        key={pack.id}
+        title={`${pack.name} Pack`}
+        sub={`₦${pack.price.toLocaleString()} → ${pack.money.toLocaleString()} Game Money`}
+        right={<Button size="sm" disabled={busy} onClick={()=>buy(pack.id)}>Buy</Button>}
+      />
+    ))}
   </div>;
 }
