@@ -276,9 +276,8 @@ export function GameMoneyApp() {
         data: { productId, provider, phone: phone || undefined },
       });
       if (!result.checkoutUrl) {
-        throw new Error(result.configured
-          ? "Payment checkout was not returned."
-          : `${provider === "korapay" ? "Korapay" : "PocketFi"} is not configured yet.`);
+        const message = result.configured ? "Payment checkout was not returned." : (provider === "korapay" ? "Korapay is not configured yet." : "PocketFi is not configured yet.");
+        throw new Error(message);
       }
       window.location.href = result.checkoutUrl;
     } catch (e) {
