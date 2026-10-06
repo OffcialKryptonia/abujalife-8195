@@ -461,6 +461,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
       get_public_profiles: {
         Args: never
         Returns: {

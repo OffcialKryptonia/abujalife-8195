@@ -43,6 +43,13 @@
       "when": 1791244200704,
       "tag": "0005_add_friend_and_group_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791245014977,
+      "tag": "0006_secure_friend_and_group_membership",
+      "breakpoints": true
     }
   ]
 }
