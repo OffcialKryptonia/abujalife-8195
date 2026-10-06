@@ -50,6 +50,13 @@
       "when": 1791245014977,
       "tag": "0006_secure_friend_and_group_membership",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791245432148,
+      "tag": "0007_allow_group_creator_to_join_new_chat",
+      "breakpoints": true
     }
   ]
 }
