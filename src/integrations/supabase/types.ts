@@ -32,6 +32,152 @@ export type Database = {
         }
         Relationships: []
       }
+      currency_settings: {
+        Row: {
+          id: string
+          ngn_per_usd: number
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          ngn_per_usd?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          ngn_per_usd?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      election_candidates: {
+        Row: {
+          campaign_fund: number
+          created_at: string
+          election_id: string | null
+          id: string
+          manifesto: string
+          party: string
+          status: string
+          user_id: string | null
+          votes: number
+        }
+        Insert: {
+          campaign_fund?: number
+          created_at?: string
+          election_id?: string | null
+          id?: string
+          manifesto?: string
+          party: string
+          status?: string
+          user_id?: string | null
+          votes?: number
+        }
+        Update: {
+          campaign_fund?: number
+          created_at?: string
+          election_id?: string | null
+          id?: string
+          manifesto?: string
+          party?: string
+          status?: string
+          user_id?: string | null
+          votes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_candidates_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      election_votes: {
+        Row: {
+          candidate_id: string | null
+          created_at: string
+          election_id: string | null
+          id: string
+          voter_id: string | null
+        }
+        Insert: {
+          candidate_id?: string | null
+          created_at?: string
+          election_id?: string | null
+          id?: string
+          voter_id?: string | null
+        }
+        Update: {
+          candidate_id?: string | null
+          created_at?: string
+          election_id?: string | null
+          id?: string
+          voter_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_votes_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "election_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "election_votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      elections: {
+        Row: {
+          city: string
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json
+          office_id: string
+          registration_closes_at: string | null
+          registration_opens_at: string | null
+          status: string
+          title: string
+          voting_closes_at: string | null
+          voting_opens_at: string | null
+        }
+        Insert: {
+          city?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json
+          office_id: string
+          registration_closes_at?: string | null
+          registration_opens_at?: string | null
+          status?: string
+          title: string
+          voting_closes_at?: string | null
+          voting_opens_at?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json
+          office_id?: string
+          registration_closes_at?: string | null
+          registration_opens_at?: string | null
+          status?: string
+          title?: string
+          voting_closes_at?: string | null
+          voting_opens_at?: string | null
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -74,6 +220,69 @@ export type Database = {
           requester_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      game_currency_products: {
+        Row: {
+          active: boolean
+          created_at: string
+          game_money: number
+          id: string
+          name: string
+          price_ngn: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          game_money: number
+          id: string
+          name: string
+          price_ngn: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          game_money?: number
+          id?: string
+          name?: string
+          price_ngn?: number
+        }
+        Relationships: []
+      }
+      game_institutions: {
+        Row: {
+          city: string
+          created_at: string
+          district: string | null
+          id: string
+          metadata: Json
+          name: string
+          ownership: string
+          short_name: string
+          type: string
+        }
+        Insert: {
+          city?: string
+          created_at?: string
+          district?: string | null
+          id: string
+          metadata?: Json
+          name: string
+          ownership: string
+          short_name: string
+          type: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          district?: string | null
+          id?: string
+          metadata?: Json
+          name?: string
+          ownership?: string
+          short_name?: string
+          type?: string
         }
         Relationships: []
       }
@@ -180,6 +389,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_orders: {
+        Row: {
+          amount_ngn: number
+          created_at: string
+          game_money: number
+          id: string
+          paid_at: string | null
+          product_id: string | null
+          provider: string
+          provider_payload: Json
+          provider_reference: string | null
+          reference: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_ngn: number
+          created_at?: string
+          game_money: number
+          id?: string
+          paid_at?: string | null
+          product_id?: string | null
+          provider: string
+          provider_payload?: Json
+          provider_reference?: string | null
+          reference: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_ngn?: number
+          created_at?: string
+          game_money?: number
+          id?: string
+          paid_at?: string | null
+          product_id?: string | null
+          provider?: string
+          provider_payload?: Json
+          provider_reference?: string | null
+          reference?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "game_currency_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           accessory: string
@@ -212,6 +474,8 @@ export type Database = {
           skin: string
           social: number
           updated_at: string
+          usd_bank: number
+          usd_cash: number
           user_id: string
           vehicles: Json
           visits: number
@@ -248,6 +512,8 @@ export type Database = {
           skin?: string
           social?: number
           updated_at?: string
+          usd_bank?: number
+          usd_cash?: number
           user_id: string
           vehicles?: Json
           visits?: number
@@ -284,10 +550,39 @@ export type Database = {
           skin?: string
           social?: number
           updated_at?: string
+          usd_bank?: number
+          usd_cash?: number
           user_id?: string
           vehicles?: Json
           visits?: number
           xp?: number
+        }
+        Relationships: []
+      }
+      political_profiles: {
+        Row: {
+          manifesto: string
+          office_id: string | null
+          party: string | null
+          political_reputation: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          manifesto?: string
+          office_id?: string | null
+          party?: string | null
+          political_reputation?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          manifesto?: string
+          office_id?: string | null
+          party?: string | null
+          political_reputation?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -415,6 +710,7 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          currency: string
           id: string
           kind: string
           label: string
@@ -423,6 +719,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          currency?: string
           id?: string
           kind: string
           label: string
@@ -431,6 +728,7 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          currency?: string
           id?: string
           kind?: string
           label?: string
