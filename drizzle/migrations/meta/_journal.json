@@ -57,6 +57,13 @@
       "when": 1791245432148,
       "tag": "0007_allow_group_creator_to_join_new_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791335924237,
+      "tag": "0008_game_money_foundation",
+      "breakpoints": true
     }
   ]
 }
