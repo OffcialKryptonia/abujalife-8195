@@ -286,6 +286,99 @@ export type Database = {
         }
         Relationships: []
       }
+      game_money_ledger: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json
+          reference: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json
+          reference?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json
+          reference?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      game_money_transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          recipient_id: string
+          reference: string
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          recipient_id: string
+          reference: string
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          reference?: string
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      game_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       group_chat_members: {
         Row: {
           chat_id: string
@@ -759,7 +852,56 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _apply_game_money: {
+        Args: {
+          _amount: number
+          _description: string
+          _metadata: Json
+          _reference: string
+          _type: string
+          _user: string
+        }
+        Returns: Json
+      }
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
+      credit_game_money: {
+        Args: {
+          _amount: number
+          _description?: string
+          _metadata?: Json
+          _reference?: string
+          _type: string
+          _user: string
+        }
+        Returns: Json
+      }
+      debit_game_money: {
+        Args: {
+          _amount: number
+          _description?: string
+          _metadata?: Json
+          _reference?: string
+          _type: string
+          _user: string
+        }
+        Returns: Json
+      }
+      get_or_create_game_wallet: {
+        Args: { _user?: string }
+        Returns: {
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "game_wallets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_public_profiles: {
         Args: never
         Returns: {
@@ -794,6 +936,15 @@ export type Database = {
       is_group_chat_member: {
         Args: { _chat_id: string; _user_id: string }
         Returns: boolean
+      }
+      transfer_game_money: {
+        Args: {
+          _amount: number
+          _recipient: string
+          _reference?: string
+          _sender?: string
+        }
+        Returns: Json
       }
       visit_home: { Args: { _target: string }; Returns: Json }
     }
