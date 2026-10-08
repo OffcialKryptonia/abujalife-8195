@@ -289,9 +289,8 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       const v = VEHICLES.find((x) => x.id === a.vehicleId);
       if (!v) throw new GameRuleError("Vehicle not found.");
       if (s.vehicles.includes(v.id)) throw new GameRuleError("You already own one.");
-      if (s.cash + s.bank < v.price) throw new GameRuleError("You can't afford this yet.");
-      const fromBank = Math.min(s.bank, v.price);
-      return { next: { ...s, bank: s.bank - fromBank, cash: s.cash - (v.price - fromBank), vehicles: [...s.vehicles, v.id], reputation: s.reputation + v.rep, happiness: clamp(s.happiness + 10) }, message: `Keys collected: ${v.name}!`, tx: [{ amount: -v.price, label: `Bought ${v.name}`, kind: "vehicle" }] };
+      if (s.cash < v.price) throw new GameRuleError("You can't afford this yet.");
+      return { next: { ...s, bank: 0, cash: s.cash - v.price, vehicles: [...s.vehicles, v.id], reputation: s.reputation + v.rep, happiness: clamp(s.happiness + 10) }, message: `Keys collected: ${v.name}!`, tx: [{ amount: -v.price, label: `Bought ${v.name}`, kind: "vehicle" }] };
     }
     case "buyOutfit": {
       const o = OUTFITS.find((x) => x.id === a.outfitId);
