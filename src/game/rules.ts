@@ -129,7 +129,7 @@ export const CHALLENGES = [
   { title: "Fresh & clean", desc: "Get hygiene to 80+", check: (s: PlayerState) => s.hygiene >= 80, cash: 3000, xp: 30 },
   { title: "Well fed", desc: "Get hunger to 85+", check: (s: PlayerState) => s.hunger >= 85, cash: 2500, xp: 25 },
   { title: "City explorer", desc: "Be in Central Area", check: (s: PlayerState) => s.district === "cbd", cash: 4000, xp: 40 },
-  { title: "Saver", desc: "Hold ₦50,000+ in the bank", check: (s: PlayerState) => s.bank >= 50000, cash: 5000, xp: 35 },
+  { title: "Saver", desc: "Hold ₦50,000+ in the bank", check: (s: PlayerState) => s.cash >= 50000, cash: 5000, xp: 35 },
   { title: "Social butterfly", desc: "Get social to 75+", check: (s: PlayerState) => s.social >= 75, cash: 3500, xp: 35 },
   { title: "Lakeside day", desc: "Be in Jabi", check: (s: PlayerState) => s.district === "jabi", cash: 4000, xp: 40 },
   { title: "Rested", desc: "Get energy to 90+", check: (s: PlayerState) => s.energy >= 90, cash: 2500, xp: 25 },
@@ -152,7 +152,7 @@ const advance = (s: PlayerState, minutes: number): PlayerState => {
 
 function applyEffect(s: PlayerState, e: Effect, label: string, kind: string): ActionResult {
   const cost = e.cost ?? 0;
-  if (s.cash < cost) throw new GameRuleError("Not enough cash on hand.");
+  if (s.cash < cost) throw new GameRuleError("Not enough Game Money.");
   if (e.energy && e.energy < 0 && s.energy < -e.energy) throw new GameRuleError("You're too tired for that.");
   const n = advance(s, e.minutes);
   const next: PlayerState = {
@@ -209,7 +209,7 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       if (a.vehicle && !s.vehicles.includes(a.vehicle)) throw new GameRuleError("You don't own that vehicle.");
       const mode = a.mode ?? "taxi";
       const t = travelCost(s.district, a.to, a.vehicle, mode);
-      if (s.cash < t.price) throw new GameRuleError("Not enough cash for the trip.");
+      if (s.cash < t.price) throw new GameRuleError("Not enough Game Money for the trip.");
       const n = advance(s, t.minutes);
       const next = { ...n, district: a.to, cash: s.cash - t.price, energy: clamp(s.energy - (a.vehicle === "bicycle" ? 8 : a.vehicle ? 3 : MODE_INFO[mode].energy)) };
       const label = a.vehicle ? `Fuel to ${districtById(a.to).name}` : `${MODE_INFO[mode].name} to ${districtById(a.to).name}`;
@@ -231,22 +231,18 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       if (!h) throw new GameRuleError("Listing not found.");
       if (h.id === s.home_id) throw new GameRuleError("You already live here.");
       if (level < h.minLevel) throw new GameRuleError(`Landlord wants level ${h.minLevel}+.`);
-      if (s.cash + s.bank < h.rent) throw new GameRuleError("You can't afford this rent yet.");
-      const fromBank = Math.min(s.bank, h.rent);
+      if (s.cash < h.rent) throw new GameRuleError("You can't afford this rent yet.");
       const furniture = s.furniture.map((r) => (r.p && !fits([], h.size, r) ? { ...r, p: false } : r));
-      const next = { ...advance(s, 120), bank: s.bank - fromBank, cash: s.cash - (h.rent - fromBank), home_id: h.id, district: h.district, furniture, happiness: clamp(s.happiness + 15), reputation: s.reputation + Math.round(h.prestige / 5) };
+      const next = { ...advance(s, 120), bank: 0, cash: s.cash - h.rent, home_id: h.id, district: h.district, furniture, happiness: clamp(s.happiness + 15), reputation: s.reputation + Math.round(h.prestige / 5) };
       return { next, message: `Welcome to your new home: ${h.name}!`, tx: h.rent ? [{ amount: -h.rent, label: `Rent — ${h.name}`, kind: "housing" }] : [] };
     }
     case "deposit":
     case "withdraw": {
       const amt = Math.floor(a.amount);
       if (!Number.isFinite(amt) || amt <= 0) throw new GameRuleError("Enter a valid amount.");
-      if (a.type === "deposit") {
-        if (amt > s.cash) throw new GameRuleError("Not enough cash.");
-        return { next: { ...s, cash: s.cash - amt, bank: s.bank + amt }, message: `Deposited ${formatNaira(amt)}.`, tx: [{ amount: amt, label: "Bank deposit", kind: "bank" }] };
-      }
-      if (amt > s.bank) throw new GameRuleError("Insufficient bank balance.");
-      return { next: { ...s, cash: s.cash + amt, bank: s.bank - amt }, message: `Withdrew ${formatNaira(amt)}.`, tx: [{ amount: -amt, label: "Bank withdrawal", kind: "bank" }] };
+      // Game Money is already unified; deposit/withdraw are retained only as a
+      // compatibility action while the old bank UI is phased out.
+      return { next: { ...s, bank: 0 }, message: "Game Money is already unified; no deposit or withdrawal is required." };
     }
     case "useItem": {
       const row = s.furniture.find((r) => r.u === a.uid && r.p);
@@ -260,13 +256,12 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
     case "buyItem": {
       const it = itemById(a.itemId);
       if (!it || it.price === 0) throw new GameRuleError("Item not for sale.");
-      if (s.cash + s.bank < it.price) throw new GameRuleError("You can't afford this yet.");
+      if (s.cash < it.price) throw new GameRuleError("You can't afford this yet.");
       if (s.furniture.length >= 60) throw new GameRuleError("Your storage is full.");
-      const fromBank = Math.min(s.bank, it.price);
       const spot = findSpot(s.furniture, home.size, { u: ctx.uid, i: it.id, x: 0, y: 0, r: 0, p: false });
       const row = spot ?? { u: ctx.uid, i: it.id, x: 0, y: 0, r: 0, p: false };
       return {
-        next: { ...s, bank: s.bank - fromBank, cash: s.cash - (it.price - fromBank), furniture: [...s.furniture, row] },
+        next: { ...s, bank: 0, cash: s.cash - it.price, furniture: [...s.furniture, row] },
         message: spot ? `${it.name} delivered and placed in your home.` : `${it.name} delivered to storage — no space to place it.`,
         tx: [{ amount: -it.price, label: `Bought ${it.name}`, kind: "furniture" }],
       };
@@ -316,13 +311,13 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       const amt = Math.floor(a.amount);
       if (!Number.isFinite(amt) || amt < 10000) throw new GameRuleError("Minimum investment is ₦10,000.");
       if (s.invest_amount) throw new GameRuleError("Cash out your current investment first.");
-      if (amt > s.bank) throw new GameRuleError("Invest from your bank balance.");
-      return { next: { ...s, bank: s.bank - amt, invest_amount: amt, invest_start: s.game_minutes }, message: `Invested ${formatNaira(amt)} in Savanna Treasury Notes.`, tx: [{ amount: -amt, label: "Treasury notes", kind: "invest" }] };
+      if (amt > s.cash) throw new GameRuleError("Insufficient Game Money for this investment.");
+      return { next: { ...s, bank: 0, cash: s.cash - amt, invest_amount: amt, invest_start: s.game_minutes }, message: `Invested ${formatNaira(amt)} in Savanna Treasury Notes.`, tx: [{ amount: -amt, label: "Treasury notes", kind: "invest" }] };
     }
     case "cashOut": {
       if (!s.invest_amount) throw new GameRuleError("No active investment.");
       const v = investValue(s);
-      return { next: { ...s, bank: s.bank + v, invest_amount: 0, invest_start: 0 }, message: `Cashed out ${formatNaira(v)}.`, tx: [{ amount: v, label: "Treasury notes payout", kind: "invest" }] };
+      return { next: { ...s, bank: 0, cash: s.cash + v, invest_amount: 0, invest_start: 0 }, message: `Cashed out ${formatNaira(v)}.`, tx: [{ amount: v, label: "Treasury notes payout", kind: "invest" }] };
     }
     case "playGame": {
       const g = PHONE_GAMES.find((x) => x.id === a.gameId);
