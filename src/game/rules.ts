@@ -129,7 +129,7 @@ export const CHALLENGES = [
   { title: "Fresh & clean", desc: "Get hygiene to 80+", check: (s: PlayerState) => s.hygiene >= 80, cash: 3000, xp: 30 },
   { title: "Well fed", desc: "Get hunger to 85+", check: (s: PlayerState) => s.hunger >= 85, cash: 2500, xp: 25 },
   { title: "City explorer", desc: "Be in Central Area", check: (s: PlayerState) => s.district === "cbd", cash: 4000, xp: 40 },
-  { title: "Saver", desc: "Hold ₦50,000+ in the bank", check: (s: PlayerState) => s.cash >= 50000, cash: 5000, xp: 35 },
+  { title: "Saver", desc: "Hold ₦50,000+ in Game Money", check: (s: PlayerState) => s.cash >= 50000, cash: 5000, xp: 35 },
   { title: "Social butterfly", desc: "Get social to 75+", check: (s: PlayerState) => s.social >= 75, cash: 3500, xp: 35 },
   { title: "Lakeside day", desc: "Be in Jabi", check: (s: PlayerState) => s.district === "jabi", cash: 4000, xp: 40 },
   { title: "Rested", desc: "Get energy to 90+", check: (s: PlayerState) => s.energy >= 90, cash: 2500, xp: 25 },
@@ -297,7 +297,7 @@ export function applyAction(s: PlayerState, a: GameAction, ctx: { uid: string } 
       const o = OUTFITS.find((x) => x.id === a.outfitId);
       if (!o) throw new GameRuleError("Outfit not found.");
       if (s.outfit === o.id) throw new GameRuleError("You're already wearing it.");
-      if (s.cash < o.price) throw new GameRuleError("Not enough cash.");
+      if (s.cash < o.price) throw new GameRuleError("Not enough Game Money.");
       return { next: { ...advance(s, 30), cash: s.cash - o.price, outfit: o.id, happiness: clamp(s.happiness + 6) }, message: `Looking sharp in your ${outfitById(o.id).name}.`, tx: [{ amount: -o.price, label: o.name, kind: "shopping" }] };
     }
     case "claimChallenge": {
