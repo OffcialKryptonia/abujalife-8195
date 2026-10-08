@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { applyAction, GameRuleError, type GameAction, type PlayerState } from "@/game/rules";
 import { ACCESSORY_IDS, backgroundById, BACKGROUNDS, DISTRICT_IDS, HAIR_IDS, FACE_IDS, SHOE_IDS } from "@/game/content";
+import { creditAuthoritativeGameMoney, debitAuthoritativeGameMoney, getAuthoritativeGameMoney } from "@/lib/game-economy.server";
 
 const id = z.string().max(40);
 const amount = z.number().int().positive().max(1e10);
@@ -36,17 +37,23 @@ export const performAction = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase
       .from("players").select("*").eq("user_id", context.userId).maybeSingle();
     if (error || !row) return { ok: false as const, message: "Create your character first." };
+    const canonicalBalance = await getAuthoritativeGameMoney(context.userId);
+    const ruleState = { ...(row as unknown as PlayerState), cash: canonicalBalance, bank: 0 };
+
     let result;
     try {
-      result = applyAction(row as unknown as PlayerState, data, { uid: crypto.randomUUID().slice(0, 8) });
+      result = applyAction(ruleState, data, { uid: crypto.randomUUID().slice(0, 8) });
     } catch (e) {
       if (e instanceof GameRuleError) return { ok: false as const, message: e.message };
       throw e;
     }
     const n = result.next;
+    const startingBalance = canonicalBalance;
+    const endingBalance = n.cash;
+    const netMoneyDelta = endingBalance - startingBalance;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("players").update({
-      district: n.district, cash: n.cash, bank: n.bank, hunger: n.hunger, energy: n.energy,
+      district: n.district, cash: n.cash, bank: 0, hunger: n.hunger, energy: n.energy,
       happiness: n.happiness, xp: n.xp, reputation: n.reputation, job_id: n.job_id,
       career_xp: n.career_xp, shifts: n.shifts, home_id: n.home_id, game_minutes: n.game_minutes,
       hygiene: n.hygiene, social: n.social, outfit: n.outfit, furniture: n.furniture as never, vehicles: n.vehicles as never,
@@ -54,8 +61,11 @@ export const performAction = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     }).eq("user_id", context.userId);
     if (upErr) { console.error(upErr); return { ok: false as const, message: "Couldn't save. Try again." }; }
-    if (result.tx?.length) {
-      await supabaseAdmin.from("transactions").insert(result.tx.map((t) => ({ ...t, user_id: context.userId })));
+
+    if (netMoneyDelta > 0) {
+      await creditAuthoritativeGameMoney(context.userId, netMoneyDelta, "game_action", crypto.randomUUID(), result.message, { action: data.type });
+    } else if (netMoneyDelta < 0) {
+      await debitAuthoritativeGameMoney(context.userId, Math.abs(netMoneyDelta), "game_action", crypto.randomUUID(), result.message, { action: data.type });
     }
     return { ok: true as const, message: result.message };
   });
