@@ -52,8 +52,15 @@ export const performAction = createServerFn({ method: "POST" })
     const endingBalance = n.cash;
     const netMoneyDelta = endingBalance - startingBalance;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    if (netMoneyDelta > 0) {
+      await creditAuthoritativeGameMoney(context.userId, netMoneyDelta, "game_action", crypto.randomUUID(), result.message, { action: data.type });
+    } else if (netMoneyDelta < 0) {
+      await debitAuthoritativeGameMoney(context.userId, Math.abs(netMoneyDelta), "game_action", crypto.randomUUID(), result.message, { action: data.type });
+    }
+
     const { error: upErr } = await supabaseAdmin.from("players").update({
-      district: n.district, cash: n.cash, bank: 0, hunger: n.hunger, energy: n.energy,
+      district: n.district, cash: 0, bank: 0, hunger: n.hunger, energy: n.energy,
       happiness: n.happiness, xp: n.xp, reputation: n.reputation, job_id: n.job_id,
       career_xp: n.career_xp, shifts: n.shifts, home_id: n.home_id, game_minutes: n.game_minutes,
       hygiene: n.hygiene, social: n.social, outfit: n.outfit, furniture: n.furniture as never, vehicles: n.vehicles as never,
@@ -62,11 +69,6 @@ export const performAction = createServerFn({ method: "POST" })
     }).eq("user_id", context.userId);
     if (upErr) { console.error(upErr); return { ok: false as const, message: "Couldn't save. Try again." }; }
 
-    if (netMoneyDelta > 0) {
-      await creditAuthoritativeGameMoney(context.userId, netMoneyDelta, "game_action", crypto.randomUUID(), result.message, { action: data.type });
-    } else if (netMoneyDelta < 0) {
-      await debitAuthoritativeGameMoney(context.userId, Math.abs(netMoneyDelta), "game_action", crypto.randomUUID(), result.message, { action: data.type });
-    }
     return { ok: true as const, message: result.message };
   });
 
@@ -92,10 +94,12 @@ export const createCharacter = createServerFn({ method: "POST" })
     if (existing) return { ok: false as const, message: "You already have a character." };
     const { error } = await supabaseAdmin.from("players").insert({
       user_id: context.userId, name: data.name, gender: data.gender, skin: data.skin, outfit: data.outfit,
-      background: bg.id, hair: data.hair ?? (data.gender === "female" ? "braids" : "fade"), accessory: data.accessory ?? "none", face: data.face ?? "calm", shoes: data.shoes ?? "sneakers", cash: bg.cash, bank: bg.bank, xp: bg.xp, reputation: bg.rep,
+      background: bg.id, hair: data.hair ?? (data.gender === "female" ? "braids" : "fade"), accessory: data.accessory ?? "none", face: data.face ?? "calm", shoes: data.shoes ?? "sneakers", cash: 0, bank: 0, xp: bg.xp, reputation: bg.rep,
     });
     if (error) { console.error(error); return { ok: false as const, message: "Couldn't create character." }; }
-    await supabaseAdmin.from("transactions").insert({ user_id: context.userId, amount: bg.cash + bg.bank, label: `Starting funds — ${bg.name}`, kind: "start" });
+    if (bg.cash + bg.bank > 0) {
+      await creditAuthoritativeGameMoney(context.userId, bg.cash + bg.bank, "character_start", crypto.randomUUID(), `Starting funds — ${bg.name}`, { background: bg.id });
+    }
     return { ok: true as const, message: "Welcome to Abuja!" };
   });
 
