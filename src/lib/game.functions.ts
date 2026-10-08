@@ -51,23 +51,75 @@ export const performAction = createServerFn({ method: "POST" })
     const startingBalance = canonicalBalance;
     const endingBalance = n.cash;
     const netMoneyDelta = endingBalance - startingBalance;
+    const actionReference = crypto.randomUUID();
+    const originalUpdatedAt = row.updated_at;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Settle Game Money first. If the player save later loses an optimistic
+    // concurrency check, the wallet mutation is explicitly compensated.
     if (netMoneyDelta > 0) {
-      await creditAuthoritativeGameMoney(context.userId, netMoneyDelta, "game_action", crypto.randomUUID(), result.message, { action: data.type });
+      await creditAuthoritativeGameMoney(
+        context.userId,
+        netMoneyDelta,
+        "game_action",
+        actionReference,
+        result.message,
+        { action: data.type },
+      );
     } else if (netMoneyDelta < 0) {
-      await debitAuthoritativeGameMoney(context.userId, Math.abs(netMoneyDelta), "game_action", crypto.randomUUID(), result.message, { action: data.type });
+      await debitAuthoritativeGameMoney(
+        context.userId,
+        Math.abs(netMoneyDelta),
+        "game_action",
+        actionReference,
+        result.message,
+        { action: data.type },
+      );
     }
 
-    const { error: upErr } = await supabaseAdmin.from("players").update({
-      district: n.district, cash: 0, bank: 0, hunger: n.hunger, energy: n.energy,
-      happiness: n.happiness, xp: n.xp, reputation: n.reputation, job_id: n.job_id,
-      career_xp: n.career_xp, shifts: n.shifts, home_id: n.home_id, game_minutes: n.game_minutes,
-      hygiene: n.hygiene, social: n.social, outfit: n.outfit, furniture: n.furniture as never, vehicles: n.vehicles as never,
-      last_challenge_day: n.last_challenge_day, invest_amount: n.invest_amount, invest_start: n.invest_start, has_nin: n.has_nin,
-      updated_at: new Date().toISOString(),
-    }).eq("user_id", context.userId);
-    if (upErr) { console.error(upErr); return { ok: false as const, message: "Couldn't save. Try again." }; }
+    const { data: savedRows, error: upErr } = await supabaseAdmin
+      .from("players")
+      .update({
+        district: n.district, cash: 0, bank: 0, hunger: n.hunger, energy: n.energy,
+        happiness: n.happiness, xp: n.xp, reputation: n.reputation, job_id: n.job_id,
+        career_xp: n.career_xp, shifts: n.shifts, home_id: n.home_id, game_minutes: n.game_minutes,
+        hygiene: n.hygiene, social: n.social, outfit: n.outfit, furniture: n.furniture as never, vehicles: n.vehicles as never,
+        last_challenge_day: n.last_challenge_day, invest_amount: n.invest_amount, invest_start: n.invest_start, has_nin: n.has_nin,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", context.userId)
+      .eq("updated_at", originalUpdatedAt)
+      .select("user_id");
+
+    if (upErr || !savedRows?.length) {
+      // Another player-state mutation won the race. Never leave the wallet
+      // changed for an action whose corresponding state update did not commit.
+      try {
+        if (netMoneyDelta > 0) {
+          await debitAuthoritativeGameMoney(
+            context.userId,
+            netMoneyDelta,
+            "game_action_compensation",
+            actionReference,
+            "Compensation after concurrent player-state update conflict",
+            { action: data.type, compensates: actionReference },
+          );
+        } else if (netMoneyDelta < 0) {
+          await creditAuthoritativeGameMoney(
+            context.userId,
+            Math.abs(netMoneyDelta),
+            "game_action_compensation",
+            actionReference,
+            "Compensation after concurrent player-state update conflict",
+            { action: data.type, compensates: actionReference },
+          );
+        }
+      } catch (compensationError) {
+        console.error("Game Money compensation failed", { compensationError, actionReference, userId: context.userId });
+      }
+      console.error("Player save lost optimistic concurrency race", { upErr, actionReference, userId: context.userId });
+      return { ok: false as const, message: "That action conflicted with another update. Nothing was charged; please try again." };
+    }
 
     return { ok: true as const, message: result.message };
   });
