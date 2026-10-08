@@ -1,18 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Lock } from "lucide-react";
+import { Coins, Lock } from "lucide-react";
 import { haptic } from "@/components/game/motion";
-import { challengeForDay, formatNaira } from "@/game/rules";
+import { challengeForDay } from "@/game/rules";
 import { z } from "zod";
 import {
-  ArrowLeft, Banknote, Briefcase, Car, CarFront, Gamepad2, HeartPulse, Home, Landmark, LineChart, MessageCircle, Newspaper,
+  ArrowLeft, Briefcase, Car, CarFront, Gamepad2, HeartPulse, Home, Landmark, LineChart, MessageCircle, Newspaper,
   Radio, Settings, Shield, Shirt, Sparkles, Trophy, Utensils, Users, CalendarDays, Battery, Signal, UserRound,
 } from "lucide-react";
 import { useMe } from "@/hooks/use-player";
 import { formatGameTime } from "@/game/rules";
 import * as A from "@/components/game/phone/apps";
+import { GameMoneyApp } from "@/components/game/phone/game-money-app";
 import { FeedApp, MessagesApp, PeopleApp, ProfileView } from "@/components/game/phone/social";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/play/phone")({
   validateSearch: z.object({ app: z.string().optional() }),
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/play/phone")({
 const APPS = [
   { id: "jobs", name: "Jobs", icon: Briefcase, tone: "bg-primary" },
   { id: "messages", name: "Messages", icon: MessageCircle, tone: "bg-success" },
-  { id: "bank", name: "AbujaBank", icon: Banknote, tone: "bg-surface" },
+  { id: "bank", name: "Game Money", icon: Coins, tone: "bg-gold" },
   { id: "ride", name: "AbujaRide", icon: Car, tone: "bg-gold" },
   { id: "homes", name: "AbujaHomes", icon: Home, tone: "bg-hygiene" },
   { id: "motors", name: "AbujaMotors", icon: CarFront, tone: "bg-destructive" },
@@ -69,7 +71,7 @@ function PhoneScreen() {
     switch (app) {
       case "jobs": return <A.JobsApp />;
       case "messages": return <MessagesApp key={chatWith ?? "list"} initialPeer={chatWith} />;
-      case "bank": return <A.BankApp />;
+      case "bank": return <GameMoneyApp />;
       case "ride": return <A.RideApp />;
       case "homes": return <A.HomesApp />;
       case "motors": return <A.MotorsApp />;
@@ -107,7 +109,7 @@ function PhoneScreen() {
               <p className="font-display text-6xl font-semibold tracking-tight">{t.clock.replace(/ (AM|PM)/, "")}</p>
               <p className="text-sm opacity-70">{t.weekday} · Day {t.day}</p>
               <div className="mt-8 w-[85%] space-y-2">
-                {[["AbujaFeed", "3 new posts trending in Abuja"], ["Jobs", p.job_id ? "Your shift is waiting" : "New openings near you"], ["AbujaBank", `Balance ${formatNaira(p.cash + p.bank)}`]].map(([a, m], i) => (
+                {[["AbujaFeed", "3 new posts trending in Abuja"], ["Jobs", p.job_id ? "Your shift is waiting" : "New openings near you"], ["Game Money", "Your wallet is ready"]].map(([a, m], i) => (
                   <div key={a} className="rounded-2xl bg-surface-foreground/12 p-3 text-left backdrop-blur animate-rise" style={{ animationDelay: `${150 + i * 90}ms` }}><p className="text-[10px] font-bold uppercase tracking-wider text-gold">{a}</p><p className="text-sm">{m}</p></div>
                 ))}
               </div>
@@ -131,10 +133,10 @@ function PhoneScreen() {
                 <p className="font-display text-5xl font-semibold tracking-tight">{t.clock.replace(/ (AM|PM)/, "")}</p>
                 <p className="text-sm opacity-75">{t.weekday} · Day {t.day} · Abuja</p>
               </div>
-              <div className="mb-4 flex items-center justify-between rounded-3xl bg-surface-foreground/12 p-3 text-surface-foreground backdrop-blur animate-rise">
-                <div><p className="text-[10px] font-bold uppercase tracking-wider opacity-60">AbujaBank</p><p className="font-display text-lg font-bold">{formatNaira(p.cash + p.bank)}</p></div>
+              <Button variant="ghost" onClick={() => open("bank")} className="mb-4 flex h-auto w-full items-center justify-between rounded-3xl bg-surface-foreground/12 p-3 text-surface-foreground backdrop-blur animate-rise hover:bg-surface-foreground/20 hover:text-surface-foreground">
+                <div><p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Game Money</p><p className="font-display text-lg font-bold">Open your wallet</p></div>
                 <div className="text-right"><p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Today</p><p className="text-xs font-semibold">{p.job_id ? "Shift available" : "Find a job"}</p></div>
-              </div>
+              </Button>
               <div className="grid grid-cols-4 gap-x-2 gap-y-4">
                 {APPS.filter((a) => !DOCK.includes(a.id)).map((a, i) => (
                   <button key={a.id} onClick={() => open(a.id)} className="relative flex flex-col items-center gap-1 transition-transform active:scale-90 animate-rise" style={{ animationDelay: `${i * 25}ms` }}>

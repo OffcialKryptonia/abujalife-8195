@@ -47,12 +47,26 @@ export async function transferGameMoney(recipientId: string, amount: number, ref
 type AdminClient = typeof supabase;
 /** Server-only: call with the service-role client after verifying the caller. */
 export async function creditGameMoney(admin: AdminClient, userId: string, amount: number, type: string, reference?: string, description?: string, metadata: Record<string, unknown> = {}) {
-  const { data, error } = await admin.rpc("credit_game_money", { _user: userId, _amount: amount, _type: type, _reference: reference, _description: description, _metadata: metadata as never });
+  const { data, error } = await admin.rpc("credit_game_money", {
+    _user: userId,
+    _amount: amount,
+    _type: type,
+    ...(reference === undefined ? {} : { _reference: reference }),
+    ...(description === undefined ? {} : { _description: description }),
+    _metadata: metadata as never,
+  });
   if (error) throw error;
   return data;
 }
 export async function debitGameMoney(admin: AdminClient, userId: string, amount: number, type: string, reference?: string, description?: string, metadata: Record<string, unknown> = {}) {
-  const { data, error } = await admin.rpc("debit_game_money", { _user: userId, _amount: amount, _type: type, _reference: reference, _description: description, _metadata: metadata as never });
+  const { data, error } = await admin.rpc("debit_game_money", {
+    _user: userId,
+    _amount: amount,
+    _type: type,
+    ...(reference === undefined ? {} : { _reference: reference }),
+    ...(description === undefined ? {} : { _description: description }),
+    _metadata: metadata as never,
+  });
   if (error) throw error;
   return data;
 }
