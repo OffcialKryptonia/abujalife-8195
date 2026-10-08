@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Eye, MapPin, Moon, Plus, Sun, Sunrise, Sunset, Volume2, VolumeX, Wifi } from "lucide-react";
+import { Coins, Eye, MapPin, Moon, Plus, Sun, Sunrise, Sunset, Volume2, VolumeX, Wifi } from "lucide-react";
 import { useMe, useProfiles, isOnline } from "@/hooks/use-player";
 import { useAnimatedNumber } from "@/hooks/use-animated-number";
 import { districtById } from "@/game/content";
-import { formatGameTime, formatNaira, levelFromXp, mood, xpForLevel } from "@/game/rules";
+import { formatGameTime, levelFromXp, mood, xpForLevel } from "@/game/rules";
+import { getGameMoneyBalance } from "@/lib/game-money";
 import { getSoundPref, setSound } from "@/lib/sound";
 import { NeedsRings } from "./NeedsRings";
 import { PlayerCharacter } from "./PlayerCharacter";
@@ -33,16 +35,21 @@ function CharacterPortraitInner({ p }: { p: ReturnType<typeof useMe> }) {
   return <PlayerCharacter look={{ skin: p.skin, gender: p.gender, outfit: p.outfit, hair: p.hair, accessory: p.accessory, face: p.face, shoes: p.shoes }} pose="idle" />;
 }
 
-function Wallet({ cash }: { cash: number }) {
-  const shown = useAnimatedNumber(cash, 700);
+function Wallet({ userId }: { userId: string }) {
+  const { data: balance } = useQuery({
+    queryKey: ["game-money-balance", userId],
+    queryFn: getGameMoneyBalance,
+    refetchInterval: 20_000,
+  });
+  const shown = useAnimatedNumber(balance ?? 0, 700);
   const [bump, setBump] = useState(0);
-  useEffect(() => setBump((b) => b + 1), [cash]);
+  useEffect(() => setBump((b) => b + 1), [balance]);
   return (
     <div key={bump} className="relative flex items-center overflow-hidden rounded-full bg-gold-gradient py-0.5 pl-1 text-gold-foreground shadow-gold animate-coin">
       <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-[linear-gradient(90deg,transparent,oklch(1_0_0/0.45),transparent)] animate-shine" />
-      <span className="grid size-6 place-items-center rounded-full bg-surface/15 font-display text-xs font-black">₦</span>
-      <span className="px-1.5 font-display text-sm font-bold tabular-nums">{formatNaira(shown).slice(1)}</span>
-      <Link to="/play/phone" search={{ app: "bank" }} aria-label="Add money" className="mr-0.5 grid size-7 place-items-center rounded-full bg-surface text-gold transition-transform active:scale-90"><Plus className="size-4" strokeWidth={3} /></Link>
+      <span className="grid size-6 place-items-center rounded-full bg-surface/15"><Coins className="size-3.5" /></span>
+      <span className="px-1.5 font-display text-sm font-bold tabular-nums">{balance === undefined ? "GM —" : `GM ${Math.round(shown).toLocaleString("en-NG")}`}</span>
+      <Link to="/play/phone" search={{ app: "bank" }} aria-label="Open Game Money wallet" className="mr-0.5 grid size-7 place-items-center rounded-full bg-surface text-gold transition-transform active:scale-90"><Plus className="size-4" strokeWidth={3} /></Link>
     </div>
   );
 }
@@ -72,7 +79,7 @@ export function GameHUD() {
             <span className="shrink-0 rounded-full bg-surface-foreground/10 px-1.5 leading-4">{m.emoji} {m.label}</span>
           </div>
         </div>
-        <Wallet cash={p.cash} />
+        <Wallet userId={p.user_id} />
       </div>
       <div className="mx-auto mt-2 flex max-w-3xl items-center justify-between gap-2">
         <div className="flex flex-col gap-1">
