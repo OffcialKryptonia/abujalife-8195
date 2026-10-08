@@ -98,7 +98,13 @@ export const createCharacter = createServerFn({ method: "POST" })
     });
     if (error) { console.error(error); return { ok: false as const, message: "Couldn't create character." }; }
     if (bg.cash + bg.bank > 0) {
-      await creditAuthoritativeGameMoney(context.userId, bg.cash + bg.bank, "character_start", crypto.randomUUID(), `Starting funds — ${bg.name}`, { background: bg.id });
+      try {
+        await creditAuthoritativeGameMoney(context.userId, bg.cash + bg.bank, "character_start", crypto.randomUUID(), `Starting funds — ${bg.name}`, { background: bg.id });
+      } catch (creditError) {
+        await supabaseAdmin.from("players").delete().eq("user_id", context.userId);
+        console.error(creditError);
+        return { ok: false as const, message: "Couldn't initialize your Game Money wallet." };
+      }
     }
     return { ok: true as const, message: "Welcome to Abuja!" };
   });
