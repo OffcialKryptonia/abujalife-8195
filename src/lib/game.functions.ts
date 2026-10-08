@@ -180,3 +180,63 @@ export const updateLook = createServerFn({ method: "POST" })
     if (error) { console.error(error); return { ok: false as const }; }
     return { ok: true as const };
   });
+
+    return { ok: true as const, message: result.message };
+  });
+
+const createSchema = z.object({
+  name: z.string().trim().min(2).max(24).regex(/^[\p{L}\p{N} .'-]+$/u),
+  gender: z.enum(["male", "female"]),
+  skin: z.enum(["1", "2", "3", "4"]),
+  outfit: z.enum(["agbada", "kaftan", "ankara", "corporate", "street", "senator", "asooke"]),
+  background: z.enum(BACKGROUNDS.map((b) => b.id) as [string, ...string[]]),
+  hair: z.enum(HAIR_IDS).optional(),
+  accessory: z.enum(ACCESSORY_IDS).optional(),
+  face: z.enum(FACE_IDS).optional(),
+  shoes: z.enum(SHOE_IDS).optional(),
+});
+
+export const createCharacter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => createSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const bg = backgroundById(data.background);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin.from("players").select("user_id").eq("user_id", context.userId).maybeSingle();
+    if (existing) return { ok: false as const, message: "You already have a character." };
+    const { error } = await supabaseAdmin.from("players").insert({
+      user_id: context.userId, name: data.name, gender: data.gender, skin: data.skin, outfit: data.outfit,
+      background: bg.id, hair: data.hair ?? (data.gender === "female" ? "braids" : "fade"), accessory: data.accessory ?? "none", face: data.face ?? "calm", shoes: data.shoes ?? "sneakers", cash: 0, bank: 0, xp: bg.xp, reputation: bg.rep,
+    });
+    if (error) { console.error(error); return { ok: false as const, message: "Couldn't create character." }; }
+    if (bg.cash + bg.bank > 0) {
+      try {
+        await creditAuthoritativeGameMoney(context.userId, bg.cash + bg.bank, "character_start", crypto.randomUUID(), `Starting funds — ${bg.name}`, { background: bg.id });
+      } catch (creditError) {
+        await supabaseAdmin.from("players").delete().eq("user_id", context.userId);
+        console.error(creditError);
+        return { ok: false as const, message: "Couldn't initialize your Game Money wallet." };
+      }
+    }
+    return { ok: true as const, message: "Welcome to Abuja!" };
+  });
+
+const lookSchema = z.object({
+  skin: z.enum(["1", "2", "3", "4"]),
+  gender: z.enum(["male", "female"]),
+  hair: z.enum(HAIR_IDS),
+  accessory: z.enum(ACCESSORY_IDS),
+  face: z.enum(FACE_IDS),
+  shoes: z.enum(SHOE_IDS),
+});
+
+/** Cosmetic look changes are free; validated against the catalogue server-side. */
+export const updateLook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => lookSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("players").update({ ...data, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
+    if (error) { console.error(error); return { ok: false as const }; }
+    return { ok: true as const };
+  });
